@@ -46,7 +46,7 @@ let currentTheme = localStorage.getItem('smart_grades_theme') || 'light';
 const adminEmails = ["dev1@test.com", "dev2@test.com"];
 
 // ==========================================
-// 🔐 КОНФІГУРАЦІЯ FIREBASE ХМАРИ
+// 🔐 ТВІЙ КОД КОНФІГУРАЦІЇ FIREBASE
 // ==========================================
 const firebaseConfig = {
     apiKey: "AIzaSyDnvZte3CnzDx9jXBFX_q55TUb-bpmXN14",
@@ -59,7 +59,6 @@ const firebaseConfig = {
     databaseURL: "https://calc001-default-rtdb.europe-west1.firebasedatabase.app"
 };
 
-// Ініціалізація
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
@@ -80,7 +79,6 @@ function applyTranslations() {
     }
 }
 
-// --- НАЛАШТУВАННЯ ІНТЕРФЕЙСУ ---
 function openSettings() {
     document.getElementById('theme-selector').value = currentTheme;
     document.getElementById('lang-selector').value = currentLang;
@@ -89,15 +87,11 @@ function openSettings() {
 function closeSettings() { document.getElementById('settings-modal').classList.remove('show'); }
 window.changeTheme = function(theme) {
     currentTheme = theme; localStorage.setItem('smart_grades_theme', theme);
-    if(theme === 'dark') document.body.classList.add('dark-theme');
-    else document.body.classList.remove('dark-theme');
+    if(theme === 'dark') document.body.classList.add('dark-theme'); else document.body.classList.remove('dark-theme');
 };
 window.changeLanguage = function(lang) { currentLang = lang; localStorage.setItem('smart_grades_lang', lang); applyTranslations(); };
 
-function validateEmailPattern(email) {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email);
-}
+function validateEmailPattern(email) { return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email); }
 function encodeEmail(email) { return email.replace(/\./g, ','); }
 function decodeEmail(encoded) { return encoded.replace(/,/g, '.'); }
 
@@ -109,7 +103,6 @@ function customConfirm(message, onConfirmCallback) {
     document.getElementById('confirm-cancel-btn').onclick = () => { modal.classList.remove('show'); };
 }
 
-// --- СИСТЕМА АВТОРИЗАЦІЇ ---
 let currentUserEmail = null;
 
 function toggleAuthMode() {
@@ -130,13 +123,8 @@ function register() {
 
     const encEmail = encodeEmail(email);
     database.ref('users/' + encEmail).once('value').then((snapshot) => {
-        if (snapshot.exists()) {
-            showAuthError("Акаунт вже існує!");
-        } else {
-            database.ref('users/' + encEmail).set({ password: password }).then(() => {
-                loginUser(email);
-            });
-        }
+        if (snapshot.exists()) showAuthError("Акаунт вже існує!");
+        else database.ref('users/' + encEmail).set({ password: password }).then(() => { loginUser(email); });
     });
 }
 
@@ -149,67 +137,49 @@ function login() {
     const encEmail = encodeEmail(email);
     database.ref('users/' + encEmail).once('value').then((snapshot) => {
         const userData = snapshot.val();
-        if (userData && userData.password === password) {
-            loginUser(email);
-        } else {
-            showAuthError("Невірна пошта або пароль!");
-        }
+        if (userData && userData.password === password) loginUser(email); else showAuthError("Невірна пошта або пароль!");
     });
 }
 
 function loginUser(email) {
-    currentUserEmail = email;
-    localStorage.setItem('smart_grades_current_user', email);
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app-screen').style.display = 'block';
+    currentUserEmail = email; localStorage.setItem('smart_grades_current_user', email);
+    document.getElementById('auth-screen').style.display = 'none'; document.getElementById('app-screen').style.display = 'block';
     document.getElementById('user-display-email').textContent = email;
     
-    const devConsole = document.getElementById('dev-console-card');
-    const devBtn = document.getElementById('dev-nav-btn');
-    
+    const devConsole = document.getElementById('dev-console-card'); const devBtn = document.getElementById('dev-nav-btn');
     if (adminEmails.includes(email)) {
         devBtn.style.display = 'inline-block'; devConsole.style.display = 'none';
         database.ref('users').on('value', () => { renderAdminConsole(); });
     } else {
-        devBtn.style.display = 'none'; devConsole.style.display = 'none';
-        database.ref('users').off();
+        devBtn.style.display = 'none'; devConsole.style.display = 'none'; database.ref('users').off();
     }
-
     loadFromFirebase();
 }
 
 function logout() {
-    database.ref('users').off();
-    if(currentUserEmail) {
-        database.ref('grades/' + encodeEmail(currentUserEmail)).off();
-    }
+    database.ref('users').off(); if(currentUserEmail) database.ref('grades/' + encodeEmail(currentUserEmail)).off();
     currentUserEmail = null; localStorage.removeItem('smart_grades_current_user');
-    document.getElementById('app-screen').style.display = 'none';
-    document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('dev-nav-btn').style.display = 'none';
-    document.getElementById('dev-console-card').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'none'; document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('dev-nav-btn').style.display = 'none'; document.getElementById('dev-console-card').style.display = 'none';
     semestersData = { 1: [], 2: [] };
 }
 
 window.toggleDevConsole = function() {
     const devConsole = document.getElementById('dev-console-card');
     if (devConsole.style.display === 'none') { devConsole.style.display = 'block'; devConsole.scrollIntoView({ behavior: 'smooth' }); } 
-    else { devConsole.style.display = 'none'; }
+    else devConsole.style.display = 'none';
 };
 
 function renderAdminConsole() {
     const tbody = document.getElementById('dev-users-list'); tbody.innerHTML = '';
     database.ref('users').once('value').then((usersSnapshot) => {
         const usersData = usersSnapshot.val() || {}; const emailsEncoded = Object.keys(usersData);
-        if(emailsEncoded.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:gray;">Немає користувачів</td></tr>`; return;
-        }
+        if(emailsEncoded.length === 0) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:gray;">Немає користувачів</td></tr>`; return; }
         database.ref('grades').once('value').then((gradesSnapshot) => {
             const allGradesData = gradesSnapshot.val() || {};
             emailsEncoded.forEach(encEmail => {
                 const email = decodeEmail(encEmail); const userGrades = allGradesData[encEmail] || {};
-                let sem1Count = userGrades.sem1 ? userGrades.sem1.length : 0;
-                let sem2Count = userGrades.sem2 ? userGrades.sem2.length : 0;
+                let sem1Count = userGrades.sem1 ? userGrades.sem1.length : 0; let sem2Count = userGrades.sem2 ? userGrades.sem2.length : 0;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `<td><b>${email}</b> ${adminEmails.includes(email) ? '<span style="color:#F59E0B;">(Dev)</span>' : ''}</td><td>${sem1Count} / ${sem2Count}</td><td><button class="delete-btn" style="font-weight:bold;" onclick="deleteUserAdmin('${email}')">${t('acc_delete')}</button></td>`;
                 tbody.appendChild(tr);
@@ -224,9 +194,7 @@ window.deleteUserAdmin = function(emailToDelete) {
     });
 };
 
-// --- ОБЧИСЛЕННЯ ОЦІНОК ---
 let currentSemester = 1; let gradingSystem = 'new'; let semestersData = { 1: [], 2: [] };
-
 const specialtyCategories = [
     { keys: ["фіз-мат", "фізмат", "фізико-математичний", "математичний"], name: "Фіз-Мат", core: ["алгебра", "геометрія", "математика", "фізика"], minGrade: 6 },
     { keys: ["історичний", "історія", "гуманітарний"], name: "Історичний", core: ["історія", "право", "громадянська"], minGrade: 6 },
@@ -266,19 +234,15 @@ function showInlineMessage(text, isError = false) {
     const msgEl = document.getElementById('import-msg'); msgEl.textContent = text; msgEl.className = 'inline-msg ' + (isError ? 'error' : 'success');
     setTimeout(() => msgEl.className = 'inline-msg', 3000);
 }
-function showToast(text) {
-    const toast = document.getElementById('toast-overlay'); document.getElementById('toast-msg').textContent = text; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000);
-}
+function showToast(text) { const toast = document.getElementById('toast-overlay'); document.getElementById('toast-msg').textContent = text; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
 
 function calculateAverage(gradesString) {
     let sum = 0; let count = 0;
     if (gradingSystem === 'new') {
         if (!gradesString.includes('(')) {
-            const rawItems = gradesString.split(/[\s,]+/);
-            rawItems.forEach(item => { const num = parseFloat(item.trim()); if (!isNaN(num) && num >= 1 && num <= 12) { sum += num; count++; } });
+            const rawItems = gradesString.split(/[\s,]+/); rawItems.forEach(item => { const num = parseFloat(item.trim()); if (!isNaN(num) && num >= 1 && num <= 12) { sum += num; count++; } });
         } else {
-            const regexGR = /\b([1-9]|1[0-2])\s*\([^)]*ГР[^)]*\)/gi; const matches = [...gradesString.matchAll(regexGR)];
-            matches.forEach(m => { sum += parseFloat(m[1]); count++; });
+            const regexGR = /\b([1-9]|1[0-2])\s*\([^)]*ГР[^)]*\)/gi; const matches = [...gradesString.matchAll(regexGR)]; matches.forEach(m => { sum += parseFloat(m[1]); count++; });
         }
     } else {
         let stringWithoutParens = gradesString.replace(/\([^)]*\)/g, ' '); const rawItems = stringWithoutParens.split(/[\s,]+/);
@@ -308,8 +272,7 @@ function checkSpecialtyRequirements() {
     const processSubject = (subject, grade, nameLabel) => {
         if (matchedCategory.core.some(word => subject.name.toLowerCase().includes(word)) && grade > 0) {
             coreSum += (subject.average || grade); coreCount++;
-            if (grade < currentMinGrade) warningsHTML += `<div class="alert-item warning">⚠️ <b>${subject.name}</b>: ${nameLabel} <b>${grade}</b>.</div>`;
-            else warningsHTML += `<div class="alert-item success">✅ <b>${subject.name}</b>: ${nameLabel} <b>${grade}</b>.</div>`;
+            if (grade < currentMinGrade) warningsHTML += `<div class="alert-item warning">⚠️ <b>${subject.name}</b>: ${nameLabel} <b>${grade}</b>.</div>`; else warningsHTML += `<div class="alert-item success">✅ <b>${subject.name}</b>: ${nameLabel} <b>${grade}</b>.</div>`;
         }
     };
     if (currentSemester === 'annual') getAnnualSubjects().forEach(s => processSubject(s, s.annualGrade, t('ann_score'))); else semestersData[currentSemester].forEach(s => { const stats = calculateAverage(s.grades); processSubject({...s, average: stats.average}, stats.semesterGrade, t('sem_score')); });
@@ -350,54 +313,62 @@ function renderSubjects() {
     updateTotalGPA(); checkSpecialtyRequirements();
 }
 
-// --- 🚀 АБСОЛЮТНО ВСЕЇДНИЙ ДИНАМІЧНИЙ ПАРСЕР ОЦІНОК СТОВПЧИКОМ 🚀 ---
+// =========================================================================
+// 🚀 ІДЕАЛЬНИЙ БРОНЕБІЙНИЙ ПАРСЕР ОЦІНОК 🚀
+// =========================================================================
 document.getElementById('parse-btn').addEventListener('click', () => {
     const rawText = document.getElementById('import-text').value; 
     if (!rawText.trim()) return;
     
     let addedCount = 0;
 
-    // Видаляємо всі приховані Windows-символи повернення каретки \r
-    const cleanText = rawText.replace(/\r/g, '');
-    // Ділимо на окремі рядки
-    const lines = cleanText.split('\n');
+    // 1. Очищуємо текст від прихованих Windows-символів (\r) та розбиваємо на рядки
+    const lines = rawText.replace(/\r/g, '').split('\n');
+
+    // 2. Створюємо регулярний вираз, який шукає Предмет та ВСІ цифри після нього
+    // Він автоматично ігнорує будь-яку кількість табів (\t) чи пробілів між ними
+    const lineRegex = /([А-ЯІЇЄҐA-Z][^\d]*?)\s*([\d\s,.]+)/g;
 
     lines.forEach(line => {
-        let trimmedLine = line.trim();
-        if (!trimmedLine) return; // Пропускаємо порожні рядки
+        // Зрізаємо нумерацію типу "1. ", якщо скопійовано списком
+        let cleanLine = line.replace(/^[\d.\s\)]+/, '').trim();
+        if (!cleanLine) return; // Пропускаємо порожні рядки
 
-        // Супер-регулярка: шукає ОСТАННЄ число від 1 до 12 в рядку, ігноруючи БУДЬ-ЯКУ кількість пробілів чи табів перед ним
-        const denseMatch = trimmedLine.match(/^(.*?)\s+(1[0-2]|[1-9])$/);
-        
-        if (denseMatch) {
-            let subjectName = denseMatch[1].trim()
-                .replace(/^[\d.\s\t]+/, '') // Видаляємо номери на початку рядка типу "1. ", "2. "
-                .replace(/[\n\t]+/g, ' ')
-                .replace(/\s{2,}/g, ' '); // Залишаємо максимум один пробіл між словами в назві предмету
-                
-            let grade = denseMatch[2].trim();
+        let match;
+        let foundInLine = false;
 
-            if (subjectName && subjectName.length > 1) {
-                semestersData[currentSemester].push({ name: subjectName, grades: grade });
+        // Шукаємо всі предмети в рядку (працює і для стовпчиків, і для злиплих текстів)
+        while ((match = lineRegex.exec(cleanLine)) !== null) {
+            // Назва предмета: забираємо величезні відступи і робимо один пробіл
+            let subject = match[1].trim().replace(/[\t\n]+/g, ' ').replace(/\s{2,}/g, ' ');
+            
+            // Оцінки: навіть якщо їх там багато (5 5 5), перетворюємо їх на красивий рядок
+            let grades = match[2].trim().replace(/[.,]/g, ' ').replace(/[\t\n]+/g, ' ').replace(/\s{2,}/g, ' ');
+
+            // Якщо предмет адекватний і є хоча б одна цифра — зберігаємо!
+            if (subject.length > 2 && /\d/.test(grades)) {
+                semestersData[currentSemester].push({ name: subject, grades: grades });
                 addedCount++;
-                return; 
+                foundInLine = true;
             }
         }
 
-        // Запасний варіант для складного формату е-журналу з ГР та дужками
-        const regexJournal = /\b(\d+)\s*([А-ЯІЇЄҐA-Z][А-ЯІЇЄҐа-яіїєґA-Za-z\s'’«»\-]*?)\s*(?=(?:[1-9]|1[0-2]|Н)\s*(?:\(|,|$|\s))([\s\S]*?)$/g;
-        let journalMatch = regexJournal.exec(trimmedLine);
-        if (journalMatch) {
-            let subjectName = journalMatch[2].trim().replace(/[\n\t]+/g, ' ').replace(/\s{2,}/g, ' ');
-            let rawGrades = journalMatch[3].trim();
-            if (subjectName && /\d/.test(rawGrades)) {
-                semestersData[currentSemester].push({ name: subjectName, grades: rawGrades });
-                addedCount++;
+        // Запасний план для дуже складних е-журналів (з темами в дужках)
+        if (!foundInLine) {
+            const regexJournal = /\b(\d+)\s*([А-ЯІЇЄҐA-Z][А-ЯІЇЄҐа-яіїєґA-Za-z\s'’«»\-]*?)\s*(?=(?:[1-9]|1[0-2]|Н)\s*(?:\(|,|$|\s))([\s\S]*?)$/g;
+            let journalMatch = regexJournal.exec(cleanLine);
+            if (journalMatch) {
+                let subjectName = journalMatch[2].trim().replace(/[\n\t]+/g, ' ').replace(/\s{2,}/g, ' ');
+                let rawGrades = journalMatch[3].trim();
+                if (subjectName && /\d/.test(rawGrades)) {
+                    semestersData[currentSemester].push({ name: subjectName, grades: rawGrades });
+                    addedCount++;
+                }
             }
         }
     });
 
-    // Оновлення інтерфейсу та хмари Firebase
+    // Оновлюємо інтерфейс та зберігаємо все у хмару
     if (addedCount > 0) { 
         document.getElementById('import-text').value = ''; 
         saveToFirebase(); 
