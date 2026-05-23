@@ -43,11 +43,11 @@ const translations = {
 let currentLang = localStorage.getItem('smart_grades_lang') || 'uk';
 let currentTheme = localStorage.getItem('smart_grades_theme') || 'light';
 
-// Список твоїх адмін-акаунтів для доступу до консолі розробника
+// Список твоїх адмін-акаунтів для доступу до загальної консолі
 const adminEmails = ["dev1@test.com", "dev2@test.com"];
 
 // ==========================================
-// 🔐 ТВІЙ ОСОБИСТИЙ КОД КОНФІГУРАЦІЇ FIREBASE
+// 🔐 ТВІЙ КОД КОНФІГУРАЦІЇ FIREBASE
 // ==========================================
 const firebaseConfig = {
     apiKey: "AIzaSyDnvZte3CnzDx9jXBFX_q55TUb-bpmXN14",
@@ -60,7 +60,7 @@ const firebaseConfig = {
     databaseURL: "https://calc001-default-rtdb.europe-west1.firebasedatabase.app"
 };
 
-// Ініціалізація додатку Firebase
+// Ініціалізація Firebase хмари
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
@@ -81,7 +81,7 @@ function applyTranslations() {
     }
 }
 
-// --- НАЛАШТУВАННЯ ---
+// --- НАЛАШТУВАННЯ ТЕМ ТА МОВ ---
 function openSettings() {
     document.getElementById('theme-selector').value = currentTheme;
     document.getElementById('lang-selector').value = currentLang;
@@ -102,7 +102,7 @@ function validateEmailPattern(email) {
 function encodeEmail(email) { return email.replace(/\./g, ','); }
 function decodeEmail(encoded) { return encoded.replace(/,/g, '.'); }
 
-// --- ВІКНО ПІДТВЕРДЖЕННЯ ---
+// --- МОДАЛЬНЕ ВІКНО ПІДТВЕРДЖЕННЯ ---
 function customConfirm(message, onConfirmCallback) {
     const modal = document.getElementById('confirm-modal');
     document.getElementById('confirm-text').textContent = message;
@@ -398,47 +398,59 @@ function renderSubjects() {
     updateTotalGPA(); checkSpecialtyRequirements();
 }
 
-// --- ПОКРАЩЕНИЙ ШВИДКИЙ ІМПОРТ (ДЛЯ ВСІХ ТИПІВ ТЕКСТУ) ---
+// --- 🚀 СУПЕР-ВСЕЇДНИЙ ШВИДКИЙ ІМПОРТ ЗЛИПЛИХ СТОВПЧИКІВ ТА ТАБУЛЯЦІЙ 🚀 ---
 document.getElementById('parse-btn').addEventListener('click', () => {
     const rawText = document.getElementById('import-text').value; 
     if (!rawText.trim()) return;
     
     let addedCount = 0;
-    
-    // 1. Спочатку перевіряємо стандартний формат електронного журналу з номерами
-    const regexJournal = /\b(\d+)\s*([А-ЯІЇЄҐA-Z][А-ЯІЇЄҐа-яіїєґA-Za-z\s'’«»\-]*?)\s*(?=(?:[1-9]|1[0-2]|Н)\s*(?:\(|,|$|\s))([\s\S]*?)(?=\s*\b\d+\s*[А-ЯІЇЄҐA-Z][а-яіїєґa-zА-ЯІЇЄҐA-Z]|\s*$)/g;
-    let match;
-    
-    while ((match = regexJournal.exec(rawText)) !== null) {
-        let subjectName = match[2].trim().replace(/[\n\r\t]+/g, ' ').replace(/\s{2,}/g, ' '); 
-        let rawGrades = match[3].replace(/[\n\r\t]+/g, ' ').trim();
-        if (subjectName && /\d/.test(rawGrades)) { 
-            semestersData[currentSemester].push({ name: subjectName, grades: rawGrades }); 
-            addedCount++; 
-        }
-    }
 
-    // 2. Якщо стандартний не спрацював, запускаємо супер-пошук для щільного злиплого тексту (напр. Англійська мова7)
-    if (addedCount === 0) {
-        const regexDense = /([А-ЯІЇЄҐA-Z][А-ЯІЇЄҐа-яіїєґA-Za-z\s'’«»\-]*?)\s*(1[0-2]|[1-9])(?=\s*[А-ЯІЇЄҐA-Z]|$)/g;
+    // Розбиваємо скопійований текст на окремі рядки
+    const lines = rawText.split('\n');
+
+    lines.forEach(line => {
+        let trimmedLine = line.trim();
+        if (!trimmedLine) return; // Пропускаємо порожні рядки
+
+        // 1. ПЕРЕВІРКА НА ЗЛИПЛИЙ ФОРМАТ ТА ТАБУЛЯЦІЇ (напр. "Біология  6" або "Біологія6")
+        // Шукаємо оцінку від 1 до 12, яка стоїть на самому-самому кінці рядка
+        const denseMatch = trimmedLine.match(/(.*?)\s*(1[0-2]|[1-9])$/);
         
-        while ((match = regexDense.exec(rawText)) !== null) { 
-            let subjectName = match[1].trim(); 
-            let grade = match[2].trim(); 
-            
-            if (subjectName && grade) { 
-                semestersData[currentSemester].push({ name: subjectName, grades: grade }); 
-                addedCount++; 
-            } 
-        }
-    }
+        if (denseMatch) {
+            let subjectName = denseMatch[1].trim()
+                .replace(/^[\d.\s]+/, '') // Видаляємо номери списку на початку рядка типу "1. ", якщо вони є
+                .replace(/[\n\r\t]+/g, ' ')
+                .replace(/\s{2,}/g, ' ');
+            let grade = denseMatch[2].trim();
 
+            if (subjectName && subjectName.length > 2) {
+                semestersData[currentSemester].push({ name: subjectName, grades: grade });
+                addedCount++;
+                return; // Рядок успішно оброблено, переходимо до наступного
+            }
+        }
+
+        // 2. ЯКЩО НЕ СПРАЦЮВАЛО — ПЕРЕВІРЯЄМО СКЛАДНИЙ ФОРМАТ Е-ЖУРНАЛУ (з темами та ГР в дужках)
+        const regexJournal = /\b(\d+)\s*([А-ЯІЇЄҐA-Z][А-ЯІЇЄҐа-яіїєґA-Za-z\s'’«»\-]*?)\s*(?=(?:[1-9]|1[0-2]|Н)\s*(?:\(|,|$|\s))([\s\S]*?)$/g;
+        let journalMatch = regexJournal.exec(trimmedLine);
+        if (journalMatch) {
+            let subjectName = journalMatch[2].trim().replace(/[\n\r\t]+/g, ' ').replace(/\s{2,}/g, ' ');
+            let rawGrades = journalMatch[3].trim();
+            if (subjectName && /\d/.test(rawGrades)) {
+                semestersData[currentSemester].push({ name: subjectName, grades: rawGrades });
+                addedCount++;
+            }
+        }
+    });
+
+    // Оновлюємо інтерфейс сайту та синхронізуємо дані в хмарі Firebase
     if (addedCount > 0) { 
         document.getElementById('import-text').value = ''; 
         saveToFirebase(); 
         showInlineMessage(`${t('msg_added')} ${addedCount}`); 
-    } 
-    else showInlineMessage(t('msg_error'), true);
+    } else {
+        showInlineMessage(t('msg_error'), true);
+    }
 });
 
 document.getElementById('add-subject-btn').addEventListener('click', () => {
