@@ -1,4 +1,6 @@
-// --- СЛОВНИК ПЕРЕКЛАДІВ ---
+// =========================================================================
+// 1. СЛОВНИК ЛОКАЛІЗАЦІЇ (ПЕРЕКЛАДИ СИСТЕМИ)
+// =========================================================================
 const translations = {
     uk: {
         app_title: "🎓 Розумний калькулятор оцінок", login_title: "🎓 Вхід", login_hint: "Авторизуйтесь, щоб зберігати свої оцінки",
@@ -6,18 +8,18 @@ const translations = {
         new_email_ph: "Нова електронна пошта", new_pass_ph: "Придумайте пароль", register_btn: "Створити акаунт", has_account: "Вже маєте акаунт?",
         login_link: "Увійти", welcome: "Вітаємо,", settings: "Налаштування", logout: "Вийти", sys_old: "Стара система (Всі оцінки)",
         sys_new: "Нова система (Тільки ГР)", sem_1: "І Семестр", sem_2: "ІІ Семестр", sem_annual: "Річні оцінки",
-        import_title: "🚀 Швидкий імпорт з журналу", import_hint: "Вставте текст з журналу. Система розпізнає всі оцінки, а перемикач зверху визначить, як саме їх рахувати.",
+        import_title: "🚀 Швидкий імпорт з журналу", import_hint: "Вставте текст з журналу. Система автоматично розпізнає назви та оцінки.",
         import_ph: "Вставте скопійовані оцінки сюди...", parse_btn: "Розпізнати оцінки", spec_title: "🎯 Аналіз за профілем",
-        spec_ph: "Оберіть профіль (напр. Інформатичний)...", add_title: "➕ Додати предмет вручну", add_ph: "Назва предмету (напр. Математика)",
+        spec_ph: "Оберіть профіль...", add_title: "➕ Додати предмет вручну", add_ph: "Назва предмету",
         add_btn: "Додати", clear_btn: "Очистити семестр", total_gpa_sem: "Загальний середній бал:", total_gpa_ann: "Загальний середній річний бал:",
         settings_title: "⚙️ Налаштування", theme_label: "Тема оформлення:", theme_light: "Світла", theme_dark: "Темна", lang_label: "Мова інтерфейсу:",
         close: "Закрити", confirm_title: "⚠️ Підтвердження", cancel: "Скасувати", ok_delete: "ОК, видалити", empty_data: "Оцінок поки немає.",
         no_annual: "Немає даних для розрахунку річних оцінок. Заповніть І або ІІ семестр.", delete_btn: "✕ Видалити", grades_ph: "Оцінки",
         grade_count: "Оцінок:", avg_score: "Середній бал:", sem_score: "За семестр:", ann_score: "Річна оцінка:", auto_calc: "Автоматичний розрахунок",
-        profile: "Профіль:", prof_score: "Профільний бал:", msg_added: "Успішно додано:", msg_cleared: "Очищено!", msg_error: "Не розпізнано структуру.",
-        dev_title: "🛠️ Консоль розробника", dev_hint: "Доступно тільки для адміністраторів. Тут можна керувати обліковими записами.",
+        profile: "Профіль:", prof_score: "Профільний бал:", msg_added: "Успішно додано:", msg_cleared: "Очищено!", msg_error: "Не розпізнано структуру рядків.",
+        dev_title: "🛠️ Консоль розробника", dev_hint: "Доступно тільки для адміністраторів.",
         u_email: "Електронна пошта", u_subjects: "Предметів (I/II)", action: "Дія", acc_delete: "Видалити акаунт",
-        invalid_email: "Введіть дійсну електронну пошту (напр. user@mail.com)!", dev_btn: "Консоль"
+        invalid_email: "Введіть дійсну електронну пошту!", dev_btn: "Консоль"
     },
     en: {
         app_title: "🎓 Smart Grade Calculator", login_title: "🎓 Login", login_hint: "Log in to save your grades",
@@ -25,29 +27,32 @@ const translations = {
         new_email_ph: "New Email", new_pass_ph: "Create Password", register_btn: "Create Account", has_account: "Already have an account?",
         login_link: "Log In", welcome: "Welcome,", settings: "Settings", logout: "Log Out", sys_old: "Old System (All grades)",
         sys_new: "New System (Only GR)", sem_1: "Semester I", sem_2: "Semester II", sem_annual: "Annual Grades",
-        import_title: "🚀 Quick Import", import_hint: "Paste text from the journal. The system will recognize the grades based on the switch above.",
+        import_title: "🚀 Quick Import", import_hint: "Paste text from the journal.",
         import_ph: "Paste copied grades here...", parse_btn: "Parse Grades", spec_title: "🎯 Profile Analysis",
-        spec_ph: "Select profile (e.g. IT)...", add_title: "➕ Add Subject Manually", add_ph: "Subject name (e.g. Math)",
+        spec_ph: "Select profile...", add_title: "➕ Add Subject Manually", add_ph: "Subject name",
         add_btn: "Add", clear_btn: "Clear Semester", total_gpa_sem: "Overall GPA:", total_gpa_ann: "Annual GPA:",
         settings_title: "⚙️ Settings", theme_label: "Theme:", theme_light: "Light", theme_dark: "Dark", lang_label: "Language:",
         close: "Close", confirm_title: "⚠️ Confirmation", cancel: "Cancel", ok_delete: "OK, Delete", empty_data: "No grades yet.",
         no_annual: "No data for annual grades. Fill in Semester I or II.", delete_btn: "✕ Delete", grades_ph: "Grades",
         grades_count: "Grades count:", avg_score: "Average:", sem_score: "Semester:", ann_score: "Annual:", auto_calc: "Automatic calculation",
         profile: "Profile:", prof_score: "Profile GPA:", msg_added: "Successfully added:", msg_cleared: "Cleared!", msg_error: "Structure not recognized.",
-        dev_title: "🛠️ Developer Console", dev_hint: "Available for admins only. Here you can manage user accounts.",
+        dev_title: "🛠️ Developer Console", dev_hint: "Available for admins only.",
         u_email: "Email Address", u_subjects: "Subjects (I/II)", action: "Action", acc_delete: "Delete Account",
-        invalid_email: "Please enter a valid email address (e.g. user@mail.com)!", dev_btn: "Console"
+        invalid_email: "Please enter a valid email address!", dev_btn: "Console"
     }
 };
 
+
+// =========================================================================
+// 2. ГЛОБАЛЬНИЙ СТАН ТА СУПЕР-КОНФІГУРАЦІЯ FIREBASE ХМАРИ
+// =========================================================================
 let currentLang = localStorage.getItem('smart_grades_lang') || 'uk';
 let currentTheme = localStorage.getItem('smart_grades_theme') || 'light';
+let currentUserEmail = null;
 
-const adminEmails = ["belugedad@gmail.com", "mykhailov@gmail.com"];
+// Список адміністраторів з доступом до глобальної панелі керування користувачами
+const adminEmails = ["dev1@test.com", "dev2@test.com", "belugedad@gmail.com"];
 
-// ==========================================
-// 🔐 ТВІЙ КОД КОНФІГУРАЦІЇ FIREBASE
-// ==========================================
 const firebaseConfig = {
     apiKey: "AIzaSyDnvZte3CnzDx9jXBFX_q55TUb-bpmXN14",
     authDomain: "calc001.firebaseapp.com",
@@ -55,19 +60,28 @@ const firebaseConfig = {
     storageBucket: "calc001.firebasestorage.app",
     messagingSenderId: "527887058439",
     appId: "1:527887058439:web:b0c4de8cedd51386644ca2",
-    measurementId: "G-GNSZ6Y2VJJ",
     databaseURL: "https://calc001-default-rtdb.europe-west1.firebasedatabase.app"
 };
 
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
+
+// =========================================================================
+// 3. ДОПОМІЖНІ УТИЛІТИ, МОВИ ТА НАЛАШТУВАННЯ ТЕМ
+// =========================================================================
 function t(key) { return translations[currentLang][key] || key; }
+
+function encodeEmail(email) { return email.replace(/\./g, ','); }
+function decodeEmail(encoded) { return encoded.replace(/,/g, '.'); }
 
 function applyTranslations() {
     document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.getAttribute('data-i18n')); });
     document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
-    renderSubjects(); checkSpecialtyRequirements();
+    
+    renderSubjects(); 
+    checkSpecialtyRequirements();
+    
     const titleEl = document.getElementById('list-title');
     if (currentSemester === 'annual') {
         titleEl.textContent = `📋 ${t('sem_annual')}`;
@@ -84,16 +98,21 @@ function openSettings() {
     document.getElementById('lang-selector').value = currentLang;
     document.getElementById('settings-modal').classList.add('show');
 }
-function closeSettings() { document.getElementById('settings-modal').classList.remove('show'); }
-window.changeTheme = function(theme) {
-    currentTheme = theme; localStorage.setItem('smart_grades_theme', theme);
-    if(theme === 'dark') document.body.classList.add('dark-theme'); else document.body.classList.remove('dark-theme');
-};
-window.changeLanguage = function(lang) { currentLang = lang; localStorage.setItem('smart_grades_lang', lang); applyTranslations(); };
 
-function validateEmailPattern(email) { return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email); }
-function encodeEmail(email) { return email.replace(/\./g, ','); }
-function decodeEmail(encoded) { return encoded.replace(/,/g, '.'); }
+function closeSettings() { document.getElementById('settings-modal').classList.remove('show'); }
+
+window.changeTheme = function(theme) {
+    currentTheme = theme; 
+    localStorage.setItem('smart_grades_theme', theme);
+    if(theme === 'dark') document.body.classList.add('dark-theme');
+    else document.body.classList.remove('dark-theme');
+};
+
+window.changeLanguage = function(lang) { 
+    currentLang = lang; 
+    localStorage.setItem('smart_grades_lang', lang); 
+    applyTranslations(); 
+};
 
 function customConfirm(message, onConfirmCallback) {
     const modal = document.getElementById('confirm-modal');
@@ -103,22 +122,43 @@ function customConfirm(message, onConfirmCallback) {
     document.getElementById('confirm-cancel-btn').onclick = () => { modal.classList.remove('show'); };
 }
 
-let currentUserEmail = null;
+function showInlineMessage(text, isError = false) {
+    const msgEl = document.getElementById('import-msg'); 
+    msgEl.textContent = text; 
+    msgEl.className = 'inline-msg ' + (isError ? 'error' : 'success');
+    setTimeout(() => msgEl.className = 'inline-msg', 3000);
+}
 
+function showToast(text) { 
+    const toast = document.getElementById('toast-overlay'); 
+    document.getElementById('toast-msg').textContent = text; 
+    toast.classList.add('show'); 
+    setTimeout(() => toast.classList.remove('show'), 3000); 
+}
+
+
+// =========================================================================
+// 4. СИСТЕМА СИНХРОННОЇ АВТОРИЗАЦІЇ ТА ШПИГУН ВИДАЛЕННЯ АКАУНТУ
+// =========================================================================
 function toggleAuthMode() {
-    const loginForm = document.getElementById('login-form'); const regForm = document.getElementById('register-form');
+    const loginForm = document.getElementById('login-form'); 
+    const regForm = document.getElementById('register-form');
     document.getElementById('auth-msg').textContent = '';
     if (loginForm.style.display === 'none') { loginForm.style.display = 'block'; regForm.style.display = 'none'; } 
     else { loginForm.style.display = 'none'; regForm.style.display = 'block'; }
 }
 
-function showAuthError(text) { const msg = document.getElementById('auth-msg'); msg.textContent = text; msg.style.opacity = 1; }
+function showAuthError(text) { 
+    const msg = document.getElementById('auth-msg'); 
+    msg.textContent = text; 
+    msg.style.opacity = 1; 
+}
 
 function register() {
     const email = document.getElementById('reg-email').value.trim().toLowerCase();
     const password = document.getElementById('reg-password').value;
     if (!email || !password) return showAuthError("Заповніть всі поля!");
-    if (!validateEmailPattern(email)) return showAuthError(t('invalid_email'));
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) return showAuthError(t('invalid_email'));
     if (password.length < 4) return showAuthError("Пароль має бути від 4 символів");
 
     const encEmail = encodeEmail(email);
@@ -132,23 +172,35 @@ function login() {
     const email = document.getElementById('login-email').value.trim().toLowerCase();
     const password = document.getElementById('login-password').value;
     if (!email || !password) return showAuthError("Заповніть всі поля!");
-    if (!validateEmailPattern(email)) return showAuthError(t('invalid_email'));
 
     const encEmail = encodeEmail(email);
     database.ref('users/' + encEmail).once('value').then((snapshot) => {
         const userData = snapshot.val();
-        if (userData && userData.password === password) loginUser(email); else showAuthError("Невірна пошта або пароль!");
+        if (userData && userData.password === password) loginUser(email); 
+        else showAuthError("Невірна пошта або пароль!");
     });
 }
 
 function loginUser(email) {
-    currentUserEmail = email; localStorage.setItem('smart_grades_current_user', email);
-    document.getElementById('auth-screen').style.display = 'none'; document.getElementById('app-screen').style.display = 'block';
+    currentUserEmail = email; 
+    localStorage.setItem('smart_grades_current_user', email);
+    document.getElementById('auth-screen').style.display = 'none'; 
+    document.getElementById('app-screen').style.display = 'block';
     document.getElementById('user-display-email').textContent = email;
     
-    const devConsole = document.getElementById('dev-console-card'); const devBtn = document.getElementById('dev-nav-btn');
+    // СУПЕР-ШПИГУН: Слухаємо, чи не видалив адмін цей акаунт примусово
+    const encEmail = encodeEmail(email);
+    database.ref('users/' + encEmail).on('value', (snapshot) => {
+        if (!snapshot.exists()) {
+            document.getElementById('deleted-modal').classList.add('show');
+            localStorage.removeItem('smart_grades_current_user');
+        }
+    });
+    
+    const devConsole = document.getElementById('dev-console-card'); 
+    const devBtn = document.getElementById('dev-nav-btn');
     if (adminEmails.includes(email)) {
-        devBtn.style.display = 'inline-block'; devConsole.style.display = 'none';
+        devBtn.style.display = 'inline-block'; 
         database.ref('users').on('value', () => { renderAdminConsole(); });
     } else {
         devBtn.style.display = 'none'; devConsole.style.display = 'none'; database.ref('users').off();
@@ -157,29 +209,37 @@ function loginUser(email) {
 }
 
 function logout() {
-    database.ref('users').off(); if(currentUserEmail) database.ref('grades/' + encodeEmail(currentUserEmail)).off();
-    currentUserEmail = null; localStorage.removeItem('smart_grades_current_user');
-    document.getElementById('app-screen').style.display = 'none'; document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('dev-nav-btn').style.display = 'none'; document.getElementById('dev-console-card').style.display = 'none';
+    database.ref('users').off(); 
+    if(currentUserEmail) database.ref('grades/' + encodeEmail(currentUserEmail)).off();
+    currentUserEmail = null; 
+    localStorage.removeItem('smart_grades_current_user');
+    document.getElementById('app-screen').style.display = 'none'; 
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('dev-nav-btn').style.display = 'none'; 
+    document.getElementById('dev-console-card').style.display = 'none';
     semestersData = { 1: [], 2: [] };
 }
 
-window.toggleDevConsole = function() {
-    const devConsole = document.getElementById('dev-console-card');
-    if (devConsole.style.display === 'none') { devConsole.style.display = 'block'; devConsole.scrollIntoView({ behavior: 'smooth' }); } 
-    else devConsole.style.display = 'none';
-};
 
+// =========================================================================
+// 5. АДМІНІСТРАТИВНА ПАНЕЛЬ КЕРУВАННЯ КОРИСТУВАЧАМИ
+// =========================================================================
 function renderAdminConsole() {
-    const tbody = document.getElementById('dev-users-list'); tbody.innerHTML = '';
+    const tbody = document.getElementById('dev-users-list'); 
+    tbody.innerHTML = '';
     database.ref('users').once('value').then((usersSnapshot) => {
-        const usersData = usersSnapshot.val() || {}; const emailsEncoded = Object.keys(usersData);
+        const usersData = usersSnapshot.val() || {}; 
+        const emailsEncoded = Object.keys(usersData);
         if(emailsEncoded.length === 0) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:gray;">Немає користувачів</td></tr>`; return; }
+        
         database.ref('grades').once('value').then((gradesSnapshot) => {
             const allGradesData = gradesSnapshot.val() || {};
             emailsEncoded.forEach(encEmail => {
-                const email = decodeEmail(encEmail); const userGrades = allGradesData[encEmail] || {};
-                let sem1Count = userGrades.sem1 ? userGrades.sem1.length : 0; let sem2Count = userGrades.sem2 ? userGrades.sem2.length : 0;
+                const email = decodeEmail(encEmail); 
+                const userGrades = allGradesData[encEmail] || {};
+                let sem1Count = userGrades.sem1 ? userGrades.sem1.length : 0; 
+                let sem2Count = userGrades.sem2 ? userGrades.sem2.length : 0;
+                
                 const tr = document.createElement('tr');
                 tr.innerHTML = `<td><b>${email}</b> ${adminEmails.includes(email) ? '<span style="color:#F59E0B;">(Dev)</span>' : ''}</td><td>${sem1Count} / ${sem2Count}</td><td><button class="delete-btn" style="font-weight:bold;" onclick="deleteUserAdmin('${email}')">${t('acc_delete')}</button></td>`;
                 tbody.appendChild(tr);
@@ -189,12 +249,23 @@ function renderAdminConsole() {
 }
 
 window.deleteUserAdmin = function(emailToDelete) {
-    customConfirm(`Видалити акаунт ${emailToDelete} з Firebase?`, () => {
-        const encEmail = encodeEmail(emailToDelete); database.ref('users/' + encEmail).remove(); database.ref('grades/' + encEmail).remove(); showToast(`Видалено!`); if (emailToDelete === currentUserEmail) logout();
+    customConfirm(`Видалити акаунт ${emailToDelete} з Firebase глобально?`, () => {
+        const encEmail = encodeEmail(emailToDelete); 
+        database.ref('users/' + encEmail).remove(); 
+        database.ref('grades/' + encEmail).remove(); 
+        showToast(`Видалено!`); 
+        if (emailToDelete === currentUserEmail) logout();
     });
 };
 
-let currentSemester = 1; let gradingSystem = 'new'; let semestersData = { 1: [], 2: [] };
+
+// =========================================================================
+// 6. ОБЧИСЛЕННЯ СЕРЕДНІХ БАЛІВ, ПРОФІЛІВ ТА СЕМЕСТРІВ
+// =========================================================================
+let currentSemester = 1; 
+let gradingSystem = 'new'; 
+let semestersData = { 1: [], 2: [] };
+
 const specialtyCategories = [
     { keys: ["фіз-мат", "фізмат", "фізико-математичний", "математичний"], name: "Фіз-Мат", core: ["алгебра", "геометрія", "математика", "фізика"], minGrade: 6 },
     { keys: ["історичний", "історія", "гуманітарний"], name: "Історичний", core: ["історія", "право", "громадянська"], minGrade: 6 },
@@ -216,7 +287,8 @@ function loadFromFirebase() {
 
 function saveToFirebase() {
     if (!currentUserEmail) return;
-    const encEmail = encodeEmail(currentUserEmail); database.ref('grades/' + encEmail).set({ sem1: semestersData[1], sem2: semestersData[2], system: gradingSystem });
+    const encEmail = encodeEmail(currentUserEmail); 
+    database.ref('grades/' + encEmail).set({ sem1: semestersData[1], sem2: semestersData[2], system: gradingSystem });
 }
 
 window.toggleSystem = function(checkbox) { gradingSystem = checkbox.checked ? 'new' : 'old'; saveToFirebase(); };
@@ -229,12 +301,6 @@ window.switchSemester = function(semesterNum) {
     else { importCard.style.display = 'block'; addCard.style.display = 'block'; clearBtn.style.display = 'block'; }
     applyTranslations();
 };
-
-function showInlineMessage(text, isError = false) {
-    const msgEl = document.getElementById('import-msg'); msgEl.textContent = text; msgEl.className = 'inline-msg ' + (isError ? 'error' : 'success');
-    setTimeout(() => msgEl.className = 'inline-msg', 3000);
-}
-function showToast(text) { const toast = document.getElementById('toast-overlay'); document.getElementById('toast-msg').textContent = text; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
 
 function calculateAverage(gradesString) {
     let sum = 0; let count = 0;
@@ -313,39 +379,29 @@ function renderSubjects() {
     updateTotalGPA(); checkSpecialtyRequirements();
 }
 
+
 // =========================================================================
-// 🚀 ІДЕАЛЬНИЙ БРОНЕБІЙНИЙ ПАРСЕР ОЦІНОК 🚀
+// 7. СУПЕР-ВСЕЇДНИЙ ПАРСЕР ОЦІНОК (РОЗДІЛЕННЯ ТЕКСТУ ЗА ПЕРШОЮ ЦИФРОЮ)
 // =========================================================================
 document.getElementById('parse-btn').addEventListener('click', () => {
     const rawText = document.getElementById('import-text').value; 
     if (!rawText.trim()) return;
     
     let addedCount = 0;
-
-    // 1. Очищуємо текст від прихованих Windows-символів (\r) та розбиваємо на рядки
     const lines = rawText.replace(/\r/g, '').split('\n');
-
-    // 2. Створюємо регулярний вираз, який шукає Предмет та ВСІ цифри після нього
-    // Він автоматично ігнорує будь-яку кількість табів (\t) чи пробілів між ними
     const lineRegex = /([А-ЯІЇЄҐA-Z][^\d]*?)\s*([\d\s,.]+)/g;
 
     lines.forEach(line => {
-        // Зрізаємо нумерацію типу "1. ", якщо скопійовано списком
         let cleanLine = line.replace(/^[\d.\s\)]+/, '').trim();
-        if (!cleanLine) return; // Пропускаємо порожні рядки
+        if (!cleanLine) return; 
 
         let match;
         let foundInLine = false;
 
-        // Шукаємо всі предмети в рядку (працює і для стовпчиків, і для злиплих текстів)
         while ((match = lineRegex.exec(cleanLine)) !== null) {
-            // Назва предмета: забираємо величезні відступи і робимо один пробіл
             let subject = match[1].trim().replace(/[\t\n]+/g, ' ').replace(/\s{2,}/g, ' ');
-            
-            // Оцінки: навіть якщо їх там багато (5 5 5), перетворюємо їх на красивий рядок
             let grades = match[2].trim().replace(/[.,]/g, ' ').replace(/[\t\n]+/g, ' ').replace(/\s{2,}/g, ' ');
 
-            // Якщо предмет адекватний і є хоча б одна цифра — зберігаємо!
             if (subject.length > 2 && /\d/.test(grades)) {
                 semestersData[currentSemester].push({ name: subject, grades: grades });
                 addedCount++;
@@ -353,7 +409,6 @@ document.getElementById('parse-btn').addEventListener('click', () => {
             }
         }
 
-        // Запасний план для дуже складних е-журналів (з темами в дужках)
         if (!foundInLine) {
             const regexJournal = /\b(\d+)\s*([А-ЯІЇЄҐA-Z][А-ЯІЇЄҐа-яіїєґA-Za-z\s'’«»\-]*?)\s*(?=(?:[1-9]|1[0-2]|Н)\s*(?:\(|,|$|\s))([\s\S]*?)$/g;
             let journalMatch = regexJournal.exec(cleanLine);
@@ -368,7 +423,6 @@ document.getElementById('parse-btn').addEventListener('click', () => {
         }
     });
 
-    // Оновлюємо інтерфейс та зберігаємо все у хмару
     if (addedCount > 0) { 
         document.getElementById('import-text').value = ''; 
         saveToFirebase(); 
@@ -378,6 +432,10 @@ document.getElementById('parse-btn').addEventListener('click', () => {
     }
 });
 
+
+// =========================================================================
+// 8. СЛУХАЧІ КНОПОК ТА ЗАВАНТАЖЕННЯ СУТНОСТІ СТОРІНКИ (ONLOAD)
+// =========================================================================
 document.getElementById('add-subject-btn').addEventListener('click', () => {
     const name = document.getElementById('new-subject-name').value.trim();
     if (name) { semestersData[currentSemester].push({ name: name, grades: '' }); document.getElementById('new-subject-name').value = ''; saveToFirebase(); }
@@ -391,6 +449,8 @@ document.getElementById('clear-all-btn').addEventListener('click', () => {
 });
 
 window.onload = () => {
-    changeTheme(currentTheme); const savedUser = localStorage.getItem('smart_grades_current_user');
-    if (savedUser) loginUser(savedUser); else { document.getElementById('auth-screen').style.display = 'flex'; applyTranslations(); }
+    changeTheme(currentTheme); 
+    const savedUser = localStorage.getItem('smart_grades_current_user');
+    if (savedUser) loginUser(savedUser); 
+    else { document.getElementById('auth-screen').style.display = 'flex'; applyTranslations(); }
 };
