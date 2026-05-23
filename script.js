@@ -43,7 +43,7 @@ const translations = {
 let currentLang = localStorage.getItem('smart_grades_lang') || 'uk';
 let currentTheme = localStorage.getItem('smart_grades_theme') || 'light';
 
-const adminEmails = ["belugedad@gmail.com"];
+const adminEmails = ["belugedad@gmail.com", "mykhailov@gmail.com"];
 
 // ==========================================
 // 🔐 ТВІЙ КОД КОНФІГУРАЦІЇ FIREBASE
