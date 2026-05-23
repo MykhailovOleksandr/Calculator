@@ -1,0 +1,714 @@
+:root {
+    --primary: #4F46E5;
+    --primary-hover: #4338CA;
+    --secondary: #10B981;
+    --secondary-hover: #059669;
+    --bg-color: #F3F4F6;
+    --card-bg: #FFFFFF;
+    --text-main: #1F2937;
+    --text-muted: #6B7280;
+    --border-color: #E5E7EB;
+    --danger: #EF4444;
+    --warning-bg: #FEF2F2;
+    --warning-border: #F87171;
+    --warning-text: #B91C1C;
+    --success-bg: #ECFDF5;
+    --success-border: #34D399;
+    --success-text: #065F46;
+}
+
+/* Змінні для ТЕМНОЇ ТЕМИ */
+body.dark-theme {
+    --bg-color: #111827;
+    --card-bg: #1F2937;
+    --text-main: #F9FAFB;
+    --text-muted: #9CA3AF;
+    --border-color: #374151;
+    --warning-bg: #451a1a;
+    --warning-border: #DC2626;
+    --warning-text: #FCA5A5;
+    --success-bg: #064e3b;
+    --success-border: #10B981;
+    --success-text: #6EE7B7;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Інпути в темній темі */
+body.dark-theme input[type="text"],
+body.dark-theme input[type="email"],
+body.dark-theme input[type="password"],
+body.dark-theme textarea,
+body.dark-theme select {
+    background-color: #374151;
+    color: #F9FAFB;
+    border-color: #4B5563;
+}
+
+body.dark-theme .tab-btn { background-color: #374151; color: #D1D5DB; }
+body.dark-theme .tab-btn:hover { background-color: #4B5563; }
+body.dark-theme .tab-btn.active { background-color: var(--primary); color: white; }
+body.dark-theme .btn-secondary { background-color: #374151; color: #D1D5DB; }
+body.dark-theme .btn-secondary:hover { background-color: #4B5563; }
+body.dark-theme .subject-stats { background-color: #111827; }
+body.dark-theme .core-gpa-box { background-color: #111827; }
+body.dark-theme .system-toggle { background-color: #111827; }
+
+.container { max-width: 800px; width: 100%; }
+h1 { text-align: center; color: var(--primary); margin-bottom: 20px; }
+
+/* --- СТИЛІ ЕКРАНУ АВТОРИЗАЦІЇ --- */
+.auth-container { display: flex; justify-content: center; align-items: center; min-height: 80vh; width: 100%; }
+.auth-card { width: 100%; max-width: 400px; padding: 40px 30px; }
+.auth-input { width: 100%; box-sizing: border-box; padding: 12px 15px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s, background-color 0.3s, color 0.3s; }
+.auth-input:focus { border-color: var(--primary); }
+.auth-btn { width: 100%; padding: 12px; margin-bottom: 15px; font-weight: bold; }
+.auth-switch { text-align: center; color: var(--text-muted); font-size: 14px; margin: 0; }
+.auth-switch b { color: var(--primary); cursor: pointer; font-weight: bold; }
+.auth-switch b:hover { text-decoration: underline; }
+
+.user-header { display: flex; justify-content: space-between; align-items: center; background-color: var(--card-bg); padding: 10px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+/* --- ПЕРЕМИКАЧ СИСТЕМИ ОЦІНЮВАННЯ --- */
+.header-actions { display: flex; justify-content: center; margin-bottom: 25px; }
+.system-toggle { display: flex; align-items: center; gap: 15px; background: var(--card-bg); padding: 12px 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+.toggle-text { font-size: 15px; font-weight: 600; color: var(--text-muted); transition: color 0.3s; }
+.toggle-text.active-text { color: var(--primary); }
+.switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #D1D5DB; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--primary); }
+input:checked + .slider:before { transform: translateX(24px); }
+
+/* --- ВКЛАДКИ (СЕМЕСТРИ) --- */
+.tabs-container { display: flex; gap: 10px; margin-bottom: 20px; }
+.tab-btn { flex: 1; padding: 12px; background-color: #E5E7EB; color: var(--text-main); border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.tab-btn:hover { background-color: #D1D5DB; }
+.tab-btn.active { background-color: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); }
+
+/* --- КАРТКИ ТА БЛОКИ --- */
+.card { background-color: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 20px; transition: background-color 0.3s; }
+.card-title { margin-top: 0; margin-bottom: 15px; font-size: 18px; color: var(--text-main); border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
+
+/* Картка розробника */
+.dev-card { border: 2px solid #F59E0B; }
+.table-wrapper { overflow-x: auto; margin-top: 15px; }
+.dev-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+.dev-table th, .dev-table td { padding: 10px; border-bottom: 1px solid var(--border-color); color: var(--text-main); }
+.dev-table th { font-weight: bold; background-color: rgba(245, 158, 11, 0.1); color: #F59E0B; }
+body.dark-theme .dev-table th { background-color: rgba(245, 158, 11, 0.2); }
+
+.import-section textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-family: monospace; font-size: 14px; resize: vertical; box-sizing: border-box; margin-bottom: 10px; }
+.action-row { display: flex; align-items: center; gap: 15px; }
+
+/* --- КНОПКИ --- */
+.btn-success { background-color: var(--secondary); color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 16px; cursor: pointer; transition: background-color 0.2s; }
+.btn-success:hover { background-color: var(--secondary-hover); }
+.btn-primary { background-color: var(--primary); color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+.btn-primary:hover { background-color: var(--primary-hover); }
+.btn-secondary { background-color: #E5E7EB; color: #374151; border: none; border-radius: 8px; padding: 10px 20px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; flex: 1; }
+.btn-secondary:hover { background-color: #D1D5DB; }
+.btn-danger { background-color: var(--danger); color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s; flex: 1; }
+.btn-danger:hover { background-color: #DC2626; }
+.delete-btn { background-color: transparent; color: var(--danger); padding: 5px 10px; font-size: 14px; border: none; cursor: pointer; border-radius: 4px; }
+.delete-btn:hover { background-color: #FEE2E2; }
+
+/* --- ПОВІДОМЛЕННЯ (ІНЛАЙН ТА TOAST) --- */
+.inline-msg { font-size: 15px; font-weight: 600; opacity: 0; transition: opacity 0.3s ease; }
+.inline-msg.success { color: var(--secondary); opacity: 1; }
+.inline-msg.error { color: var(--danger); opacity: 1; }
+
+.toast { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; justify-content: center; align-items: center; z-index: 9999; background-color: rgba(0, 0, 0, 0.4); opacity: 0; transition: opacity 0.3s ease-in-out; }
+.toast.show { opacity: 1; }
+.toast-content { background-color: #1F2937; color: white; padding: 25px 50px; border-radius: 16px; font-size: 24px; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transform: scale(0.8); transition: transform 0.3s ease-in-out; text-align: center; }
+.toast.show .toast-content { transform: scale(1); }
+
+/* --- АНАЛІЗ СПЕЦІАЛЬНОСТІ --- */
+.specialty-wrapper input { width: 100%; box-sizing: border-box; margin-bottom: 15px; }
+.specialty-results { margin-top: 10px; }
+.core-gpa-box { background-color: #F3F4F6; padding: 10px 15px; border-radius: 8px; font-weight: 600; margin-bottom: 15px; display: inline-block; transition: background-color 0.3s; }
+.alert-item { padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; border-left: 5px solid; font-size: 14px; }
+
+/* --- ВВІД ПРЕДМЕТІВ ТА СПИСОК --- */
+.add-subject-wrapper { display: flex; gap: 10px; }
+.subject-item { border-bottom: 1px solid var(--border-color); padding: 15px 0; display: flex; flex-direction: column; gap: 10px; }
+.subject-item:last-child { border-bottom: none; }
+.subject-header { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 18px; }
+.grades-input-wrapper input { width: 100%; box-sizing: border-box; font-family: monospace; }
+.subject-stats { display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 14px; background-color: #F9FAFB; padding: 10px; border-radius: 8px; transition: background-color 0.3s; }
+.stats-group { display: flex; gap: 20px; align-items: center; }
+.average-badge { background-color: var(--primary); color: white; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
+.semester-badge { background-color: var(--secondary); color: white; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 16px; }
+
+.total-gpa-container { display: flex; justify-content: flex-end; align-items: center; gap: 15px; font-size: 18px; font-weight: bold; margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--border-color); }
+.hint { font-size: 13px; color: var(--text-muted); margin-top: 5px; line-height: 1.4; margin-bottom: 10px; }
+
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease-in-out; }
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal-content { background-color: var(--card-bg); padding: 25px 30px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.2s ease-in-out, background-color 0.3s; text-align: center; }
+.modal-overlay.show .modal-content { transform: scale(1); }
+.modal-content h3 { margin-top: 0; color: var(--text-main); font-size: 20px; }
+.modal-content p { color: var(--text-muted); margin-bottom: 25px; font-size: 16px; line-height: 1.5; }
+.modal-actions { display: flex; justify-content: center; gap: 15px; }
+
+.settings-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; text-align: left;}
+.settings-group label { font-weight: bold; color: var(--text-main); }
+.settings-group select { width: 150px; margin-bottom: 0; }
+
+.container {
+    max-width: 800px;
+    width: 100%;
+}
+
+h1 {
+    text-align: center;
+    color: var(--primary);
+    margin-bottom: 20px;
+}
+
+/* --- СТИЛІ ЕКРАНУ АВТОРИЗАЦІЇ --- */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    width: 100%;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 40px 30px;
+}
+
+.auth-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.auth-input:focus {
+    border-color: var(--primary);
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+.auth-switch {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
+}
+
+.auth-switch span {
+    color: var(--primary);
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.auth-switch span:hover {
+    text-decoration: underline;
+}
+
+.user-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--card-bg);
+    padding: 10px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* --- ПЕРЕМИКАЧ СИСТЕМИ ОЦІНЮВАННЯ --- */
+.header-actions {
+    display: flex; 
+    justify-content: center; 
+    margin-bottom: 25px;
+}
+
+.system-toggle {
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+    background: var(--card-bg);
+    padding: 12px 25px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+
+.toggle-text {
+    font-size: 15px; 
+    font-weight: 600; 
+    color: var(--text-muted); 
+    transition: color 0.3s;
+}
+
+.toggle-text.active-text { 
+    color: var(--primary); 
+}
+
+.switch { 
+    position: relative; 
+    display: inline-block; 
+    width: 50px; 
+    height: 26px; 
+}
+
+.switch input { 
+    opacity: 0; 
+    width: 0; 
+    height: 0; 
+}
+
+.slider {
+    position: absolute; 
+    cursor: pointer; 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    bottom: 0;
+    background-color: #D1D5DB; 
+    transition: .4s; 
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute; 
+    content: ""; 
+    height: 18px; 
+    width: 18px; 
+    left: 4px; 
+    bottom: 4px;
+    background-color: white; 
+    transition: .4s; 
+    border-radius: 50%;
+}
+
+input:checked + .slider { 
+    background-color: var(--primary); 
+}
+
+input:checked + .slider:before { 
+    transform: translateX(24px); 
+}
+
+/* --- ВКЛАДКИ (СЕМЕСТРИ) --- */
+.tabs-container { 
+    display: flex; 
+    gap: 10px; 
+    margin-bottom: 20px; 
+}
+
+.tab-btn {
+    flex: 1; 
+    padding: 12px; 
+    background-color: #E5E7EB; 
+    color: var(--text-main);
+    border: none; 
+    border-radius: 8px; 
+    font-size: 15px; 
+    font-weight: 600;
+    cursor: pointer; 
+    transition: all 0.2s;
+}
+
+.tab-btn:hover { 
+    background-color: #D1D5DB; 
+}
+
+.tab-btn.active {
+    background-color: var(--primary); 
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+}
+
+/* --- КАРТКИ ТА БЛОКИ --- */
+.card {
+    background-color: var(--card-bg); 
+    border-radius: 12px; 
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+    margin-bottom: 20px;
+}
+
+.card-title {
+    margin-top: 0; 
+    margin-bottom: 15px; 
+    font-size: 18px;
+    color: var(--text-main); 
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.import-section textarea {
+    width: 100%; 
+    height: 100px; 
+    padding: 10px; 
+    border: 1px solid var(--border-color);
+    border-radius: 8px; 
+    font-family: monospace; 
+    font-size: 14px;
+    resize: vertical; 
+    box-sizing: border-box; 
+    margin-bottom: 10px;
+}
+
+.action-row { 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+}
+
+/* --- КНОПКИ --- */
+.btn-success {
+    background-color: var(--secondary); 
+    color: white; 
+    border: none;
+    border-radius: 8px; 
+    padding: 10px 20px; 
+    font-size: 16px;
+    cursor: pointer; 
+    transition: background-color 0.2s;
+}
+
+.btn-success:hover { 
+    background-color: var(--secondary-hover); 
+}
+
+.btn-primary {
+    background-color: var(--primary); 
+    color: white; 
+    border: none; 
+    border-radius: 8px;
+    padding: 10px 20px; 
+    font-size: 16px; 
+    cursor: pointer;
+}
+
+.btn-primary:hover { 
+    background-color: var(--primary-hover); 
+}
+
+.btn-secondary {
+    background-color: #E5E7EB; 
+    color: #374151; 
+    border: none; 
+    border-radius: 8px;
+    padding: 10px 20px; 
+    font-size: 16px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: 0.2s; 
+    flex: 1;
+}
+
+.btn-secondary:hover { 
+    background-color: #D1D5DB; 
+}
+
+.btn-danger {
+    background-color: var(--danger); 
+    color: white; 
+    border: none; 
+    border-radius: 8px;
+    padding: 10px 20px; 
+    font-size: 16px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: 0.2s; 
+    flex: 1;
+}
+
+.btn-danger:hover { 
+    background-color: #DC2626; 
+}
+
+.delete-btn {
+    background-color: transparent; 
+    color: var(--danger); 
+    padding: 5px 10px;
+    font-size: 14px; 
+    border: none; 
+    cursor: pointer; 
+    border-radius: 4px;
+}
+
+.delete-btn:hover { 
+    background-color: #FEE2E2; 
+}
+
+/* --- ПОВІДОМЛЕННЯ (ІНЛАЙН ТА TOAST) --- */
+.inline-msg { 
+    font-size: 15px; 
+    font-weight: 600; 
+    opacity: 0; 
+    transition: opacity 0.3s ease; 
+}
+
+.inline-msg.success { 
+    color: var(--secondary); 
+    opacity: 1; 
+}
+
+.inline-msg.error { 
+    color: var(--danger); 
+    opacity: 1; 
+}
+
+.toast {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    pointer-events: none; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    z-index: 9999; 
+    background-color: rgba(0, 0, 0, 0.4);
+    opacity: 0; 
+    transition: opacity 0.3s ease-in-out;
+}
+
+.toast.show { 
+    opacity: 1; 
+}
+
+.toast-content {
+    background-color: #1F2937; 
+    color: white; 
+    padding: 25px 50px;
+    border-radius: 16px; 
+    font-size: 24px; 
+    font-weight: bold;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    transform: scale(0.8); 
+    transition: transform 0.3s ease-in-out; 
+    text-align: center;
+}
+
+.toast.show .toast-content { 
+    transform: scale(1); 
+}
+
+/* --- АНАЛІЗ СПЕЦІАЛЬНОСТІ --- */
+.specialty-wrapper input { 
+    width: 100%; 
+    box-sizing: border-box; 
+    margin-bottom: 15px; 
+}
+
+.specialty-results { 
+    margin-top: 10px; 
+}
+
+.core-gpa-box {
+    background-color: #F3F4F6; 
+    padding: 10px 15px; 
+    border-radius: 8px;
+    font-weight: 600; 
+    margin-bottom: 15px; 
+    display: inline-block;
+}
+
+.alert-item {
+    padding: 12px 15px; 
+    border-radius: 8px; 
+    margin-bottom: 8px;
+    border-left: 5px solid; 
+    font-size: 14px;
+}
+
+.alert-item.warning { 
+    background-color: var(--warning-bg); 
+    border-color: var(--warning-border); 
+    color: var(--warning-text); 
+}
+
+.alert-item.success { 
+    background-color: var(--success-bg); 
+    border-color: var(--success-border); 
+    color: var(--success-text); 
+}
+
+/* --- ВВІД ПРЕДМЕТІВ ТА СПИСОК --- */
+.add-subject-wrapper { 
+    display: flex; 
+    gap: 10px; 
+}
+
+input[type="text"] {
+    flex-grow: 1; 
+    padding: 10px 15px; 
+    border: 1px solid var(--border-color);
+    border-radius: 8px; 
+    font-size: 16px; 
+    outline: none; 
+    transition: border-color 0.2s;
+}
+
+input[type="text"]:focus { 
+    border-color: var(--primary); 
+}
+
+.subject-item {
+    border-bottom: 1px solid var(--border-color); 
+    padding: 15px 0;
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px;
+}
+
+.subject-item:last-child { 
+    border-bottom: none; 
+}
+
+.subject-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    font-weight: 600; 
+    font-size: 18px; 
+}
+
+.grades-input-wrapper input { 
+    width: 100%; 
+    box-sizing: border-box; 
+    font-family: monospace; 
+}
+
+.subject-stats {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    color: var(--text-muted); 
+    font-size: 14px;
+    background-color: #F9FAFB; 
+    padding: 10px; 
+    border-radius: 8px;
+}
+
+.stats-group { 
+    display: flex; 
+    gap: 20px; 
+    align-items: center; 
+}
+
+.average-badge { 
+    background-color: var(--primary); 
+    color: white; 
+    padding: 4px 10px; 
+    border-radius: 20px; 
+    font-weight: bold; 
+}
+
+.semester-badge { 
+    background-color: var(--secondary); 
+    color: white; 
+    padding: 6px 12px; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    font-size: 16px; 
+}
+
+.total-gpa-container {
+    display: flex; 
+    justify-content: flex-end; 
+    align-items: center; 
+    gap: 15px;
+    font-size: 18px; 
+    font-weight: bold; 
+    margin-top: 20px;
+    padding-top: 20px; 
+    border-top: 2px solid var(--border-color);
+}
+
+.hint { 
+    font-size: 13px; 
+    color: var(--text-muted); 
+    margin-top: 5px; 
+    line-height: 1.4; 
+    margin-bottom: 10px;
+}
+
+/* --- КАСТОМНЕ ВІКНО ПІДТВЕРДЖЕННЯ (MODAL) --- */
+.modal-overlay {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4); 
+    backdrop-filter: blur(4px);
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    z-index: 10000; 
+    opacity: 0; 
+    pointer-events: none; 
+    transition: opacity 0.2s ease-in-out;
+}
+
+.modal-overlay.show { 
+    opacity: 1; 
+    pointer-events: all; 
+}
+
+.modal-content {
+    background-color: var(--card-bg); 
+    padding: 25px 30px; 
+    border-radius: 12px;
+    width: 90%; 
+    max-width: 400px; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    transform: scale(0.9); 
+    transition: transform 0.2s ease-in-out; 
+    text-align: center;
+}
+
+.modal-overlay.show .modal-content { 
+    transform: scale(1); 
+}
+
+.modal-content h3 { 
+    margin-top: 0; 
+    color: var(--text-main); 
+    font-size: 20px; 
+}
+
+.modal-content p { 
+    color: var(--text-muted); 
+    margin-bottom: 25px; 
+    font-size: 16px; 
+    line-height: 1.5; 
+}
+
+.modal-actions { 
+    display: flex; 
+    justify-content: center; 
+    gap: 15px; 
+}

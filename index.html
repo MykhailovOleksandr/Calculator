@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор оцінок</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="toast-overlay" class="toast">
+        <div class="toast-content" id="toast-msg">Повідомлення</div>
+    </div>
+
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 data-i18n="confirm_title">⚠️ Підтвердження</h3>
+            <p id="confirm-text">Ви впевнені?</p>
+            <div class="modal-actions">
+                <button id="confirm-cancel-btn" class="btn-secondary" data-i18n="cancel">Скасувати</button>
+                <button id="confirm-ok-btn" class="btn-danger" data-i18n="ok_delete">ОК, видалити</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 data-i18n="settings_title">⚙️ Налаштування</h3>
+            
+            <div class="settings-group">
+                <label data-i18n="theme_label">Тема оформлення:</label>
+                <select id="theme-selector" class="auth-input" onchange="changeTheme(this.value)">
+                    <option value="light" data-i18n="theme_light">Світла</option>
+                    <option value="dark" data-i18n="theme_dark">Темна</option>
+                </select>
+            </div>
+
+            <div class="settings-group">
+                <label data-i18n="lang_label">Мова інтерфейсу:</label>
+                <select id="lang-selector" class="auth-input" onchange="changeLanguage(this.value)">
+                    <option value="uk">Українська</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+
+            <button class="btn-primary" style="width: 100%; margin-top: 15px;" onclick="closeSettings()" data-i18n="close">Закрити</button>
+        </div>
+    </div>
+
+    <div id="auth-screen" class="auth-container">
+        <div class="card auth-card">
+            <h1 style="margin-bottom: 10px;" data-i18n="login_title">🎓 Вхід</h1>
+            <p class="hint" style="text-align: center; margin-bottom: 20px;" data-i18n="login_hint">Авторизуйтесь, щоб зберігати свої оцінки</p>
+            
+            <div id="login-form">
+                <input type="email" id="login-email" class="auth-input" placeholder="Електронна пошта" data-i18n-ph="email_ph">
+                <input type="password" id="login-password" class="auth-input" placeholder="Пароль" data-i18n-ph="pass_ph">
+                <button class="btn-primary auth-btn" onclick="login()" data-i18n="login_btn">Увійти</button>
+                <p class="auth-switch"><span data-i18n="no_account">Немає акаунту?</span> <b onclick="toggleAuthMode()" data-i18n="register_link">Зареєструватися</b></p>
+            </div>
+
+            <div id="register-form" style="display: none;">
+                <input type="email" id="reg-email" class="auth-input" placeholder="Нова електронна пошта" data-i18n-ph="new_email_ph">
+                <input type="password" id="reg-password" class="auth-input" placeholder="Придумайте пароль" data-i18n-ph="new_pass_ph">
+                <button class="btn-success auth-btn" onclick="register()" data-i18n="register_btn">Створити акаунт</button>
+                <p class="auth-switch"><span data-i18n="has_account">Вже маєте акаунт?</span> <b onclick="toggleAuthMode()" data-i18n="login_link">Увійти</b></p>
+            </div>
+            <span id="auth-msg" class="inline-msg error" style="display: block; text-align: center; margin-top: 10px;"></span>
+        </div>
+    </div>
+
+    <div id="app-screen" class="container" style="display: none;">
+        
+        <div class="user-header">
+            <span>👤 <span data-i18n="welcome">Вітаємо,</span> <b id="user-display-email">user@test.com</b></span>
+            <div style="display: flex; gap: 10px;">
+                <button id="dev-nav-btn" class="btn-secondary btn-dev-toggle" style="display: none;" onclick="toggleDevConsole()">🛠️ <span data-i18n="dev_btn">Консоль</span></button>
+                <button class="btn-secondary" style="padding: 5px 15px; font-size: 14px;" onclick="openSettings()">⚙️ <span data-i18n="settings">Налаштування</span></button>
+                <button class="btn-danger" style="padding: 5px 15px; font-size: 14px;" onclick="logout()" data-i18n="logout">Вийти</button>
+            </div>
+        </div>
+
+        <div class="card dev-card" id="dev-console-card" style="display: none;">
+            <h2 class="card-title" style="color: #F59E0B; border-bottom-color: #F59E0B;" data-i18n="dev_title">🛠️ Консоль розробника</h2>
+            <p class="hint" data-i18n="dev_hint">Доступно тільки для адміністраторів. Тут можна керувати обліковими записами.</p>
+            <div class="table-wrapper">
+                <table class="dev-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="u_email">Електронна пошта</th>
+                            <th data-i18n="u_subjects">Предметів (I/II)</th>
+                            <th data-i18n="action">Дія</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dev-users-list">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h1 data-i18n="app_title">🎓 Калькулятор оцінок</h1>
+
+        <div class="header-actions">
+            <div class="system-toggle">
+                <span id="label-old" class="toggle-text" data-i18n="sys_old">Стара система (Всі оцінки)</span>
+                <label class="switch">
+                    <input type="checkbox" id="grading-system-toggle" checked onchange="toggleSystem(this)">
+                    <span class="slider round"></span>
+                </label>
+                <span id="label-new" class="toggle-text active-text" data-i18n="sys_new">Нова система (Тільки ГР)</span>
+            </div>
+        </div>
+
+        <div class="tabs-container">
+            <button class="tab-btn active" id="tab-sem1" onclick="switchSemester(1)" data-i18n="sem_1">І Семестр</button>
+            <button class="tab-btn" id="tab-sem2" onclick="switchSemester(2)" data-i18n="sem_2">ІІ Семестр</button>
+            <button class="tab-btn" id="tab-annual" onclick="switchSemester('annual')" data-i18n="sem_annual">Річні оцінки</button>
+        </div>
+
+        <div class="card import-section" id="import-card">
+            <h2 class="card-title" data-i18n="import_title">🚀 Швидкий імпорт з журналу</h2>
+            <p class="hint" data-i18n="import_hint">Вставте текст з журналу. Система розпізнає всі оцінки, а перемикач зверху визначить, як саме їх рахувати.</p>
+            <textarea id="import-text" placeholder="Вставте скопійовані оцінки сюди..." data-i18n-ph="import_ph"></textarea>
+            
+            <div class="action-row">
+                <button class="btn-success" id="parse-btn" data-i18n="parse_btn">Розпізнати оцінки</button>
+                <span id="import-msg" class="inline-msg"></span>
+            </div>
+        </div>
+
+        <div class="card" id="specialty-card">
+            <h2 class="card-title" data-i18n="spec_title">🎯 Аналіз за профілем</h2>
+            <div class="specialty-wrapper">
+                <input type="text" id="specialty-input" list="specialties-list" placeholder="Оберіть профіль (напр. Інформатичний)..." data-i18n-ph="spec_ph">
+                <datalist id="specialties-list">
+                    <option value="Фіз-Мат"></option>
+                    <option value="Історичний"></option>
+                    <option value="Філологічний"></option>
+                    <option value="Хім-Біо"></option>
+                    <option value="Інформатичний"></option>
+                </datalist>
+            </div>
+            <div id="specialty-results" class="specialty-results"></div>
+        </div>
+
+        <div class="card" id="add-subject-card">
+            <h2 class="card-title" data-i18n="add_title">➕ Додати предмет вручну</h2>
+            <div class="add-subject-wrapper">
+                <input type="text" id="new-subject-name" placeholder="Назва предмету (напр. Математика)" data-i18n-ph="add_ph">
+                <button class="btn-primary" id="add-subject-btn" data-i18n="add_btn">Додати</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title" id="list-title">📋 Ваші оцінки</h2>
+            <button class="delete-btn" id="clear-all-btn" style="float: right; margin-top: -45px;" data-i18n="clear_btn">Очистити семестр</button>
+            
+            <div id="subjects-list"></div>
+            
+            <div class="total-gpa-container">
+                <span id="total-gpa-label" data-i18n="total_gpa_sem">Загальний середній бал:</span> 
+                <span id="total-gpa" class="average-badge">0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
