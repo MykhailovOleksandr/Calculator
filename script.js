@@ -1,7 +1,7 @@
 // --- СЛОВНИК ПЕРЕКЛАДІВ ---
 const translations = {
     uk: {
-        app_title: "🎓 Розумний калькулятор оцінок", login_title: "🎓 Вхід", login_hint: "Авторизуйтесь, щоб зберігати свої оцінки",
+        app_title: "🎓 Розумний калькулятор оцінок", login_title: "🎓 Вхід", login_hint: "Авторижуйтесь, щоб зберігати свої оцінки",
         email_ph: "Електронна пошта", pass_ph: "Пароль", login_btn: "Увійти", no_account: "Немає акаунту?", register_link: "Зареєструватися",
         new_email_ph: "Нова електронна пошта", new_pass_ph: "Придумайте пароль", register_btn: "Створити акаунт", has_account: "Вже маєте акаунт?",
         login_link: "Увійти", welcome: "Вітаємо,", settings: "Налаштування", logout: "Вийти", sys_old: "Стара система (Всі оцінки)",
@@ -43,7 +43,6 @@ const translations = {
 let currentLang = localStorage.getItem('smart_grades_lang') || 'uk';
 let currentTheme = localStorage.getItem('smart_grades_theme') || 'light';
 
-// Список твоїх адмін-акаунтів для доступу до загальної консолі
 const adminEmails = ["dev1@test.com", "dev2@test.com"];
 
 // ==========================================
@@ -60,7 +59,7 @@ const firebaseConfig = {
     databaseURL: "https://calc001-default-rtdb.europe-west1.firebasedatabase.app"
 };
 
-// Ініціалізація Firebase хмари
+// Ініціалізація Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
@@ -405,21 +404,22 @@ document.getElementById('parse-btn').addEventListener('click', () => {
     
     let addedCount = 0;
 
-    // Розбиваємо скопійований текст на окремі рядки
-    const lines = rawText.split('\n');
+    // Обов'язково очищуємо невидимі символи \r (повернення каретки Windows) перед обробкою
+    const cleanText = rawText.replace(/\r/g, '');
+    const lines = cleanText.split('\n');
 
     lines.forEach(line => {
         let trimmedLine = line.trim();
         if (!trimmedLine) return; // Пропускаємо порожні рядки
 
-        // 1. ПЕРЕВІРКА НА ЗЛИПЛИЙ ФОРМАТ ТА ТАБУЛЯЦІЇ (напр. "Біология  6" або "Біологія6")
+        // 1. ПЕРЕВІРКА НА ЗЛИПЛИЙ ФОРМАТ ТА ТАБУЛЯЦІЇ (напр. "Біологія  6" або "Біологія6")
         // Шукаємо оцінку від 1 до 12, яка стоїть на самому-самому кінці рядка
         const denseMatch = trimmedLine.match(/(.*?)\s*(1[0-2]|[1-9])$/);
         
         if (denseMatch) {
             let subjectName = denseMatch[1].trim()
                 .replace(/^[\d.\s]+/, '') // Видаляємо номери списку на початку рядка типу "1. ", якщо вони є
-                .replace(/[\n\r\t]+/g, ' ')
+                .replace(/[\n\t]+/g, ' ')
                 .replace(/\s{2,}/g, ' ');
             let grade = denseMatch[2].trim();
 
@@ -434,7 +434,7 @@ document.getElementById('parse-btn').addEventListener('click', () => {
         const regexJournal = /\b(\d+)\s*([А-ЯІЇЄҐA-Z][А-ЯІЇЄҐа-яіїєґA-Za-z\s'’«»\-]*?)\s*(?=(?:[1-9]|1[0-2]|Н)\s*(?:\(|,|$|\s))([\s\S]*?)$/g;
         let journalMatch = regexJournal.exec(trimmedLine);
         if (journalMatch) {
-            let subjectName = journalMatch[2].trim().replace(/[\n\r\t]+/g, ' ').replace(/\s{2,}/g, ' ');
+            let subjectName = journalMatch[2].trim().replace(/[\n\t]+/g, ' ').replace(/\s{2,}/g, ' ');
             let rawGrades = journalMatch[3].trim();
             if (subjectName && /\d/.test(rawGrades)) {
                 semestersData[currentSemester].push({ name: subjectName, grades: rawGrades });
