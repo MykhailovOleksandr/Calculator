@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Калькулятор оцінок</title>
+    <title>Розумний калькулятор оцінок</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <div id="toast-overlay" class="toast">
         <div class="toast-content" id="toast-msg">Повідомлення</div>
     </div>
@@ -83,7 +85,7 @@
 
         <div class="card dev-card" id="dev-console-card" style="display: none;">
             <h2 class="card-title" style="color: #F59E0B; border-bottom-color: #F59E0B;" data-i18n="dev_title">🛠️ Консоль розробника</h2>
-            <p class="hint" data-i18n="dev_hint">Доступно тільки для адміністраторів. Тут можна керувати обліковими записами.</p>
+            <p class="hint" data-i18n="dev_hint">Доступно тільки для адміністраторів. Тут можна керувати обліковими записами з усього світу.</p>
             <div class="table-wrapper">
                 <table class="dev-table">
                     <thead>
@@ -99,7 +101,7 @@
             </div>
         </div>
 
-        <h1 data-i18n="app_title">🎓 Калькулятор оцінок</h1>
+        <h1 data-i18n="app_title">🎓 Розумний калькулятор оцінок</h1>
 
         <div class="header-actions">
             <div class="system-toggle">
@@ -120,7 +122,7 @@
 
         <div class="card import-section" id="import-card">
             <h2 class="card-title" data-i18n="import_title">🚀 Швидкий імпорт з журналу</h2>
-            <p class="hint" data-i18n="import_hint">Вставте текст з журналу. Система розпізнає всі оцінки, а перемикач зверху визначить, як саме їх рахувати.</p>
+            <p class="hint" data-i18n="import_hint">Вставте текст з журналу. Система розпізнає звичайні та навіть злиплі оцінки.</p>
             <textarea id="import-text" placeholder="Вставте скопійовані оцінки сюди..." data-i18n-ph="import_ph"></textarea>
             
             <div class="action-row">
@@ -134,10 +136,10 @@
             <div class="specialty-wrapper">
                 <input type="text" id="specialty-input" list="specialties-list" placeholder="Оберіть профіль (напр. Інформатичний)..." data-i18n-ph="spec_ph">
                 <datalist id="specialties-list">
-                    <option value="Фіз-Мат"></option>
+                    <option value="Физико-математичний"></option>
                     <option value="Історичний"></option>
                     <option value="Філологічний"></option>
-                    <option value="Хім-Біо"></option>
+                    <option value="Хіміко-біологічний"></option>
                     <option value="Інформатичний"></option>
                 </datalist>
             </div>

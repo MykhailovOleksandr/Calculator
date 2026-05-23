@@ -43,11 +43,11 @@ const translations = {
 let currentLang = localStorage.getItem('smart_grades_lang') || 'uk';
 let currentTheme = localStorage.getItem('smart_grades_theme') || 'light';
 
-// Список адмінів, які бачать загальну консоль користувачів
+// Список твоїх адмін-акаунтів для доступу до консолі розробника
 const adminEmails = ["dev1@test.com", "dev2@test.com"];
 
 // ==========================================
-// 🔐 ТВІЙ КОД КОНФІГУРАЦІЇ FIREBASE ХМАРИ
+// 🔐 ТВІЙ ОСОБИСТИЙ КОД КОНФІГУРАЦІЇ FIREBASE
 // ==========================================
 const firebaseConfig = {
     apiKey: "AIzaSyDnvZte3CnzDx9jXBFX_q55TUb-bpmXN14",
@@ -102,7 +102,7 @@ function validateEmailPattern(email) {
 function encodeEmail(email) { return email.replace(/\./g, ','); }
 function decodeEmail(encoded) { return encoded.replace(/,/g, '.'); }
 
-// --- НАДІЙНА ФУНКЦІЯ ПІДТВЕРДЖЕННЯ ---
+// --- ВІКНО ПІДТВЕРДЖЕННЯ ---
 function customConfirm(message, onConfirmCallback) {
     const modal = document.getElementById('confirm-modal');
     document.getElementById('confirm-text').textContent = message;
@@ -111,7 +111,7 @@ function customConfirm(message, onConfirmCallback) {
     document.getElementById('confirm-cancel-btn').onclick = () => { modal.classList.remove('show'); };
 }
 
-// --- СИСТЕМА АВТОРИЗАЦІЇ З FIREBASE ХМАРОЮ ---
+// --- СИСТЕМА АВТОРИЗАЦІЇ З ХМАРОЮ ---
 let currentUserEmail = null;
 
 function toggleAuthMode() {
@@ -398,7 +398,7 @@ function renderSubjects() {
     updateTotalGPA(); checkSpecialtyRequirements();
 }
 
-// --- ПОКРАЩЕНИЙ ШВИДКИЙ ІМПОРТ (В ТОМУ ЧИСЛІ ЗЛИПЛОГО ТЕКСТУ БЕЗ ПРОБІЛІВ) ---
+// --- ПОКРАЩЕНИЙ ШВИДКИЙ ІМПОРТ (ДЛЯ ВСІХ ТИПІВ ТЕКСТУ) ---
 document.getElementById('parse-btn').addEventListener('click', () => {
     const rawText = document.getElementById('import-text').value; 
     if (!rawText.trim()) return;
