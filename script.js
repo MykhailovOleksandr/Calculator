@@ -1,7 +1,7 @@
 // --- СЛОВНИК ПЕРЕКЛАДІВ ---
 const translations = {
     uk: {
-        app_title: "🎓 Розумний калькулятор оцінок", login_title: "🎓 Вхід", login_hint: "Авторижуйтесь, щоб зберігати свої оцінки",
+        app_title: "🎓 Розумний калькулятор оцінок", login_title: "🎓 Вхід", login_hint: "Авторизуйтесь, щоб зберігати свої оцінки",
         email_ph: "Електронна пошта", pass_ph: "Пароль", login_btn: "Увійти", no_account: "Немає акаунту?", register_link: "Зареєструватися",
         new_email_ph: "Нова електронна пошта", new_pass_ph: "Придумайте пароль", register_btn: "Створити акаунт", has_account: "Вже маєте акаунт?",
         login_link: "Увійти", welcome: "Вітаємо,", settings: "Налаштування", logout: "Вийти", sys_old: "Стара система (Всі оцінки)",
@@ -46,7 +46,7 @@ let currentTheme = localStorage.getItem('smart_grades_theme') || 'light';
 const adminEmails = ["dev1@test.com", "dev2@test.com"];
 
 // ==========================================
-// 🔐 ТВІЙ КОД КОНФІГУРАЦІЇ FIREBASE
+// 🔐 КОНФІГУРАЦІЯ FIREBASE ХМАРИ
 // ==========================================
 const firebaseConfig = {
     apiKey: "AIzaSyDnvZte3CnzDx9jXBFX_q55TUb-bpmXN14",
@@ -59,7 +59,7 @@ const firebaseConfig = {
     databaseURL: "https://calc001-default-rtdb.europe-west1.firebasedatabase.app"
 };
 
-// Ініціалізація Firebase
+// Ініціалізація
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
@@ -80,7 +80,7 @@ function applyTranslations() {
     }
 }
 
-// --- НАЛАШТУВАННЯ ТЕМ ТА МОВ ---
+// --- НАЛАШТУВАННЯ ІНТЕРФЕЙСУ ---
 function openSettings() {
     document.getElementById('theme-selector').value = currentTheme;
     document.getElementById('lang-selector').value = currentLang;
@@ -101,7 +101,6 @@ function validateEmailPattern(email) {
 function encodeEmail(email) { return email.replace(/\./g, ','); }
 function decodeEmail(encoded) { return encoded.replace(/,/g, '.'); }
 
-// --- МОДАЛЬНЕ ВІКНО ПІДТВЕРДЖЕННЯ ---
 function customConfirm(message, onConfirmCallback) {
     const modal = document.getElementById('confirm-modal');
     document.getElementById('confirm-text').textContent = message;
@@ -110,7 +109,7 @@ function customConfirm(message, onConfirmCallback) {
     document.getElementById('confirm-cancel-btn').onclick = () => { modal.classList.remove('show'); };
 }
 
-// --- СИСТЕМА АВТОРИЗАЦІЇ З ХМАРОЮ ---
+// --- СИСТЕМА АВТОРИЗАЦІЇ ---
 let currentUserEmail = null;
 
 function toggleAuthMode() {
@@ -198,35 +197,21 @@ window.toggleDevConsole = function() {
     else { devConsole.style.display = 'none'; }
 };
 
-// --- ЛОГІКА ЗАГАЛЬНОЇ КОНСОЛІ РОЗРОБНИКА ---
 function renderAdminConsole() {
     const tbody = document.getElementById('dev-users-list'); tbody.innerHTML = '';
-    
     database.ref('users').once('value').then((usersSnapshot) => {
-        const usersData = usersSnapshot.val() || {};
-        const emailsEncoded = Object.keys(usersData);
-
+        const usersData = usersSnapshot.val() || {}; const emailsEncoded = Object.keys(usersData);
         if(emailsEncoded.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:gray;">Немає зареєстрованих користувачів</td></tr>`;
-            return;
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:gray;">Немає користувачів</td></tr>`; return;
         }
-
         database.ref('grades').once('value').then((gradesSnapshot) => {
             const allGradesData = gradesSnapshot.val() || {};
-
             emailsEncoded.forEach(encEmail => {
-                const email = decodeEmail(encEmail);
-                const userGrades = allGradesData[encEmail] || {};
-                
+                const email = decodeEmail(encEmail); const userGrades = allGradesData[encEmail] || {};
                 let sem1Count = userGrades.sem1 ? userGrades.sem1.length : 0;
                 let sem2Count = userGrades.sem2 ? userGrades.sem2.length : 0;
-
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><b>${email}</b> ${adminEmails.includes(email) ? '<span style="color:#F59E0B;">(Dev)</span>' : ''}</td>
-                    <td>${sem1Count} / ${sem2Count}</td>
-                    <td><button class="delete-btn" style="font-weight:bold;" onclick="deleteUserAdmin('${email}')">${t('acc_delete')}</button></td>
-                `;
+                tr.innerHTML = `<td><b>${email}</b> ${adminEmails.includes(email) ? '<span style="color:#F59E0B;">(Dev)</span>' : ''}</td><td>${sem1Count} / ${sem2Count}</td><td><button class="delete-btn" style="font-weight:bold;" onclick="deleteUserAdmin('${email}')">${t('acc_delete')}</button></td>`;
                 tbody.appendChild(tr);
             });
         });
@@ -234,16 +219,12 @@ function renderAdminConsole() {
 }
 
 window.deleteUserAdmin = function(emailToDelete) {
-    customConfirm(`Ви впевнені, що хочете повністю видалити акаунт ${emailToDelete} з глобальної хмари Firebase?`, () => {
-        const encEmail = encodeEmail(emailToDelete);
-        database.ref('users/' + encEmail).remove();
-        database.ref('grades/' + encEmail).remove();
-        showToast(`Акаунт ${emailToDelete} повністю видалено з хмари!`);
-        if (emailToDelete === currentUserEmail) logout();
+    customConfirm(`Видалити акаунт ${emailToDelete} з Firebase?`, () => {
+        const encEmail = encodeEmail(emailToDelete); database.ref('users/' + encEmail).remove(); database.ref('grades/' + encEmail).remove(); showToast(`Видалено!`); if (emailToDelete === currentUserEmail) logout();
     });
 };
 
-// --- ОСНОВНИЙ КОД КАЛЬКУЛЯТОРА ---
+// --- ОБЧИСЛЕННЯ ОЦІНОК ---
 let currentSemester = 1; let gradingSystem = 'new'; let semestersData = { 1: [], 2: [] };
 
 const specialtyCategories = [
@@ -257,42 +238,24 @@ const specialtyCategories = [
 function loadFromFirebase() {
     if (!currentUserEmail) return;
     const encEmail = encodeEmail(currentUserEmail);
-    
     database.ref('grades/' + encEmail).on('value', (snapshot) => {
-        const data = snapshot.val() || {};
-        semestersData[1] = data.sem1 || [];
-        semestersData[2] = data.sem2 || [];
-        gradingSystem = data.system || 'new';
-
-        const toggle = document.getElementById('grading-system-toggle');
-        if (toggle) toggle.checked = (gradingSystem === 'new');
-        document.getElementById('label-old').classList.toggle('active-text', gradingSystem === 'old');
-        document.getElementById('label-new').classList.toggle('active-text', gradingSystem === 'new');
-
+        const data = snapshot.val() || {}; semestersData[1] = data.sem1 || []; semestersData[2] = data.sem2 || []; gradingSystem = data.system || 'new';
+        const toggle = document.getElementById('grading-system-toggle'); if (toggle) toggle.checked = (gradingSystem === 'new');
+        document.getElementById('label-old').classList.toggle('active-text', gradingSystem === 'old'); document.getElementById('label-new').classList.toggle('active-text', gradingSystem === 'new');
         applyTranslations();
     });
 }
 
 function saveToFirebase() {
     if (!currentUserEmail) return;
-    const encEmail = encodeEmail(currentUserEmail);
-    database.ref('grades/' + encEmail).set({
-        sem1: semestersData[1],
-        sem2: semestersData[2],
-        system: gradingSystem
-    });
+    const encEmail = encodeEmail(currentUserEmail); database.ref('grades/' + encEmail).set({ sem1: semestersData[1], sem2: semestersData[2], system: gradingSystem });
 }
 
-window.toggleSystem = function(checkbox) {
-    gradingSystem = checkbox.checked ? 'new' : 'old';
-    saveToFirebase();
-};
+window.toggleSystem = function(checkbox) { gradingSystem = checkbox.checked ? 'new' : 'old'; saveToFirebase(); };
 
 window.switchSemester = function(semesterNum) {
     currentSemester = semesterNum;
-    document.getElementById('tab-sem1').classList.toggle('active', semesterNum === 1);
-    document.getElementById('tab-sem2').classList.toggle('active', semesterNum === 2);
-    document.getElementById('tab-annual').classList.toggle('active', semesterNum === 'annual');
+    document.getElementById('tab-sem1').classList.toggle('active', semesterNum === 1); document.getElementById('tab-sem2').classList.toggle('active', semesterNum === 2); document.getElementById('tab-annual').classList.toggle('active', semesterNum === 'annual');
     const importCard = document.getElementById('import-card'); const addCard = document.getElementById('add-subject-card'); const clearBtn = document.getElementById('clear-all-btn');
     if (semesterNum === 'annual') { importCard.style.display = 'none'; addCard.style.display = 'none'; clearBtn.style.display = 'none'; } 
     else { importCard.style.display = 'block'; addCard.style.display = 'block'; clearBtn.style.display = 'block'; }
@@ -300,14 +263,11 @@ window.switchSemester = function(semesterNum) {
 };
 
 function showInlineMessage(text, isError = false) {
-    const msgEl = document.getElementById('import-msg'); msgEl.textContent = text;
-    msgEl.className = 'inline-msg ' + (isError ? 'error' : 'success');
+    const msgEl = document.getElementById('import-msg'); msgEl.textContent = text; msgEl.className = 'inline-msg ' + (isError ? 'error' : 'success');
     setTimeout(() => msgEl.className = 'inline-msg', 3000);
 }
-
 function showToast(text) {
-    const toast = document.getElementById('toast-overlay'); document.getElementById('toast-msg').textContent = text;
-    toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000);
+    const toast = document.getElementById('toast-overlay'); document.getElementById('toast-msg').textContent = text; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
 function calculateAverage(gradesString) {
@@ -329,14 +289,11 @@ function calculateAverage(gradesString) {
 }
 
 function getAnnualSubjects() {
-    const list = []; const names1 = semestersData[1].map(s => s.name); const names2 = semestersData[2].map(s => s.name);
-    const allNames = [...new Set([...names1, ...names2])]; 
+    const list = []; const names1 = semestersData[1].map(s => s.name); const names2 = semestersData[2].map(s => s.name); const allNames = [...new Set([...names1, ...names2])]; 
     allNames.forEach(name => {
         const s1Subj = semestersData[1].find(s => s.name === name); const s2Subj = semestersData[2].find(s => s.name === name);
         const s1Stats = s1Subj ? calculateAverage(s1Subj.grades) : { semesterGrade: 0 }; const s2Stats = s2Subj ? calculateAverage(s2Subj.grades) : { semesterGrade: 0 };
-        let annualGrade = 0;
-        if (s1Stats.semesterGrade > 0 && s2Stats.semesterGrade > 0) annualGrade = Math.round((s1Stats.semesterGrade + s2Stats.semesterGrade) / 2);
-        else if (s1Stats.semesterGrade > 0) annualGrade = s1Stats.semesterGrade; else if (s2Stats.semesterGrade > 0) annualGrade = s2Stats.semesterGrade;
+        let annualGrade = 0; if (s1Stats.semesterGrade > 0 && s2Stats.semesterGrade > 0) annualGrade = Math.round((s1Stats.semesterGrade + s2Stats.semesterGrade) / 2); else if (s1Stats.semesterGrade > 0) annualGrade = s1Stats.semesterGrade; else if (s2Stats.semesterGrade > 0) annualGrade = s2Stats.semesterGrade;
         list.push({ name: name, s1Grade: s1Stats.semesterGrade, s2Grade: s2Stats.semesterGrade, annualGrade: annualGrade });
     });
     return list;
@@ -345,11 +302,9 @@ function getAnnualSubjects() {
 function checkSpecialtyRequirements() {
     const input = document.getElementById('specialty-input').value.toLowerCase(); const resultsContainer = document.getElementById('specialty-results');
     if (!input.trim()) { resultsContainer.innerHTML = ''; return; }
-    let matchedCategory = null;
-    for (let cat of specialtyCategories) { if (cat.keys.some(key => input.includes(key))) { matchedCategory = cat; break; } }
+    let matchedCategory = null; for (let cat of specialtyCategories) { if (cat.keys.some(key => input.includes(key))) { matchedCategory = cat; break; } }
     if (!matchedCategory) { resultsContainer.innerHTML = ''; return; }
     let warningsHTML = ''; let coreSum = 0; let coreCount = 0; const currentMinGrade = matchedCategory.minGrade;
-
     const processSubject = (subject, grade, nameLabel) => {
         if (matchedCategory.core.some(word => subject.name.toLowerCase().includes(word)) && grade > 0) {
             coreSum += (subject.average || grade); coreCount++;
@@ -357,9 +312,7 @@ function checkSpecialtyRequirements() {
             else warningsHTML += `<div class="alert-item success">✅ <b>${subject.name}</b>: ${nameLabel} <b>${grade}</b>.</div>`;
         }
     };
-    if (currentSemester === 'annual') getAnnualSubjects().forEach(s => processSubject(s, s.annualGrade, t('ann_score')));
-    else semestersData[currentSemester].forEach(s => { const stats = calculateAverage(s.grades); processSubject({...s, average: stats.average}, stats.semesterGrade, t('sem_score')); });
-
+    if (currentSemester === 'annual') getAnnualSubjects().forEach(s => processSubject(s, s.annualGrade, t('ann_score'))); else semestersData[currentSemester].forEach(s => { const stats = calculateAverage(s.grades); processSubject({...s, average: stats.average}, stats.semesterGrade, t('sem_score')); });
     if (coreCount === 0) { resultsContainer.innerHTML = ''; return; }
     resultsContainer.innerHTML = `<div class="core-gpa-box">${t('profile')} ${matchedCategory.name} | ${t('prof_score')} <span style="color:var(--primary)">${(coreSum / coreCount).toFixed(2)}</span></div>${warningsHTML}`;
 }
@@ -397,40 +350,41 @@ function renderSubjects() {
     updateTotalGPA(); checkSpecialtyRequirements();
 }
 
-// --- 🚀 СУПЕР-ВСЕЇДНИЙ ШВИДКИЙ ІМПОРТ ЗЛИПЛИХ СТОВПЧИКІВ ТА ТАБУЛЯЦІЙ 🚀 ---
+// --- 🚀 АБСОЛЮТНО ВСЕЇДНИЙ ДИНАМІЧНИЙ ПАРСЕР ОЦІНОК СТОВПЧИКОМ 🚀 ---
 document.getElementById('parse-btn').addEventListener('click', () => {
     const rawText = document.getElementById('import-text').value; 
     if (!rawText.trim()) return;
     
     let addedCount = 0;
 
-    // Обов'язково очищуємо невидимі символи \r (повернення каретки Windows) перед обробкою
+    // Видаляємо всі приховані Windows-символи повернення каретки \r
     const cleanText = rawText.replace(/\r/g, '');
+    // Ділимо на окремі рядки
     const lines = cleanText.split('\n');
 
     lines.forEach(line => {
         let trimmedLine = line.trim();
         if (!trimmedLine) return; // Пропускаємо порожні рядки
 
-        // 1. ПЕРЕВІРКА НА ЗЛИПЛИЙ ФОРМАТ ТА ТАБУЛЯЦІЇ (напр. "Біологія  6" або "Біологія6")
-        // Шукаємо оцінку від 1 до 12, яка стоїть на самому-самому кінці рядка
-        const denseMatch = trimmedLine.match(/(.*?)\s*(1[0-2]|[1-9])$/);
+        // Супер-регулярка: шукає ОСТАННЄ число від 1 до 12 в рядку, ігноруючи БУДЬ-ЯКУ кількість пробілів чи табів перед ним
+        const denseMatch = trimmedLine.match(/^(.*?)\s+(1[0-2]|[1-9])$/);
         
         if (denseMatch) {
             let subjectName = denseMatch[1].trim()
-                .replace(/^[\d.\s]+/, '') // Видаляємо номери списку на початку рядка типу "1. ", якщо вони є
+                .replace(/^[\d.\s\t]+/, '') // Видаляємо номери на початку рядка типу "1. ", "2. "
                 .replace(/[\n\t]+/g, ' ')
-                .replace(/\s{2,}/g, ' ');
+                .replace(/\s{2,}/g, ' '); // Залишаємо максимум один пробіл між словами в назві предмету
+                
             let grade = denseMatch[2].trim();
 
-            if (subjectName && subjectName.length > 2) {
+            if (subjectName && subjectName.length > 1) {
                 semestersData[currentSemester].push({ name: subjectName, grades: grade });
                 addedCount++;
-                return; // Рядок успішно оброблено, переходимо до наступного
+                return; 
             }
         }
 
-        // 2. ЯКЩО НЕ СПРАЦЮВАЛО — ПЕРЕВІРЯЄМО СКЛАДНИЙ ФОРМАТ Е-ЖУРНАЛУ (з темами та ГР в дужках)
+        // Запасний варіант для складного формату е-журналу з ГР та дужками
         const regexJournal = /\b(\d+)\s*([А-ЯІЇЄҐA-Z][А-ЯІЇЄҐа-яіїєґA-Za-z\s'’«»\-]*?)\s*(?=(?:[1-9]|1[0-2]|Н)\s*(?:\(|,|$|\s))([\s\S]*?)$/g;
         let journalMatch = regexJournal.exec(trimmedLine);
         if (journalMatch) {
@@ -443,7 +397,7 @@ document.getElementById('parse-btn').addEventListener('click', () => {
         }
     });
 
-    // Оновлюємо інтерфейс сайту та синхронізуємо дані в хмарі Firebase
+    // Оновлення інтерфейсу та хмари Firebase
     if (addedCount > 0) { 
         document.getElementById('import-text').value = ''; 
         saveToFirebase(); 
