@@ -44,14 +44,13 @@ const translations = {
 
 
 // =========================================================================
-// 2. ГЛОБАЛЬНИЙ СТАН ТА СУПЕР-КОНФІГУРАЦІЯ FIREBASE ХМАРИ
+// 2. ГЛОБАЛЬНИЙ СТАН ТА КОНФІГУРАЦІЯ FIREBASE ХМАРИ
 // =========================================================================
 let currentLang = localStorage.getItem('smart_grades_lang') || 'uk';
 let currentTheme = localStorage.getItem('smart_grades_theme') || 'light';
 let currentUserEmail = null;
 
-// Список адміністраторів з доступом до глобальної панелі керування користувачами
-const adminEmails = ["dev1@test.com", "dev2@test.com", "belugedad@gmail.com"];
+const adminEmails = ["dev1@test.com", "dev2@test.com", "belugedad@gmail.com", "mykhailov@gmail.com"];
 
 const firebaseConfig = {
     apiKey: "AIzaSyDnvZte3CnzDx9jXBFX_q55TUb-bpmXN14",
@@ -129,11 +128,15 @@ function showInlineMessage(text, isError = false) {
     setTimeout(() => msgEl.className = 'inline-msg', 3000);
 }
 
+// Покращений Toast-контролер (захист від замерзання на екрані)
 function showToast(text) { 
     const toast = document.getElementById('toast-overlay'); 
-    document.getElementById('toast-msg').textContent = text; 
-    toast.classList.add('show'); 
-    setTimeout(() => toast.classList.remove('show'), 3000); 
+    const msgEl = document.getElementById('toast-msg');
+    if (toast && msgEl) {
+        msgEl.textContent = text; 
+        toast.classList.add('show'); 
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
 }
 
 
@@ -188,7 +191,6 @@ function loginUser(email) {
     document.getElementById('app-screen').style.display = 'block';
     document.getElementById('user-display-email').textContent = email;
     
-    // СУПЕР-ШПИГУН: Слухаємо, чи не видалив адмін цей акаунт примусово
     const encEmail = encodeEmail(email);
     database.ref('users/' + encEmail).on('value', (snapshot) => {
         if (!snapshot.exists()) {
@@ -381,7 +383,7 @@ function renderSubjects() {
 
 
 // =========================================================================
-// 7. СУПЕР-ВСЕЇДНИЙ ПАРСЕР ОЦІНОК (РОЗДІЛЕННЯ ТЕКСТУ ЗА ПЕРШОЮ ЦИФРОЮ)
+// 7. СУПЕР-ПАРСЕР ОЦІНОК (БЕЗПЕЧНИЙ ІМПОРТ З КІНЦЯ РЯДКА)
 // =========================================================================
 document.getElementById('parse-btn').addEventListener('click', () => {
     const rawText = document.getElementById('import-text').value; 
@@ -389,36 +391,44 @@ document.getElementById('parse-btn').addEventListener('click', () => {
     
     let addedCount = 0;
     const lines = rawText.replace(/\r/g, '').split('\n');
-    const lineRegex = /([А-ЯІЇЄҐA-Z][^\d]*?)\s*([\d\s,.]+)/g;
 
     lines.forEach(line => {
-        let cleanLine = line.replace(/^[\d.\s\)]+/, '').trim();
-        if (!cleanLine) return; 
+        let trimmedLine = line.trim();
+        if (!trimmedLine) return; 
 
-        let match;
-        let foundInLine = false;
+        // Спочатку очищуємо номери списків на початку рядка типу "1. ", "1)"
+        trimmedLine = trimmedLine.replace(/^[\d.\s\)]+/, '').trim();
 
-        while ((match = lineRegex.exec(cleanLine)) !== null) {
-            let subject = match[1].trim().replace(/[\t\n]+/g, ' ').replace(/\s{2,}/g, ' ');
-            let grades = match[2].trim().replace(/[.,]/g, ' ').replace(/[\t\n]+/g, ' ').replace(/\s{2,}/g, ' ');
+        // ШУКАЄМО ОЦІНКИ НА САМОМУ КІНЦІ РЯДКА
+        // Вираз ([\d\s,.]+?)$ шукає групу цифр, пробілів чи табів, які завершують рядок
+        const matchGrades = trimmedLine.match(/([\d\s,.\t]+)$/);
+        
+        if (matchGrades) {
+            let gradesBlock = matchGrades[1];
+            // Назва предмета — це все, що залишилося попереду рядка
+            let subjectName = trimmedLine.substring(0, trimmedLine.length - gradesBlock.length).trim();
+            
+            // Замінюємо внутрішні коми/крапки на пробіли, а також склеюємо великі таби
+            let cleanGrades = gradesBlock.replace(/[.,\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
+            let cleanSubject = subjectName.replace(/[\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
 
-            if (subject.length > 2 && /\d/.test(grades)) {
-                semestersData[currentSemester].push({ name: subject, grades: grades });
+            // Перевіряємо, чи ми знайшли реальні оцінки (числа від 1 до 12)
+            if (cleanSubject.length > 1 && /\d/.test(cleanGrades)) {
+                semestersData[currentSemester].push({ name: cleanSubject, grades: cleanGrades });
                 addedCount++;
-                foundInLine = true;
+                return;
             }
         }
 
-        if (!foundInLine) {
-            const regexJournal = /\b(\d+)\s*([А-ЯІЇЄҐA-Z][А-ЯІЇЄҐа-яіїєґA-Za-z\s'’«»\-]*?)\s*(?=(?:[1-9]|1[0-2]|Н)\s*(?:\(|,|$|\s))([\s\S]*?)$/g;
-            let journalMatch = regexJournal.exec(cleanLine);
-            if (journalMatch) {
-                let subjectName = journalMatch[2].trim().replace(/[\n\t]+/g, ' ').replace(/\s{2,}/g, ' ');
-                let rawGrades = journalMatch[3].trim();
-                if (subjectName && /\d/.test(rawGrades)) {
-                    semestersData[currentSemester].push({ name: subjectName, grades: rawGrades });
-                    addedCount++;
-                }
+        // Запасний варіант для складних систем е-журналів (якщо в кінці стоять букви або дужки ГР)
+        const regexJournal = /\b(\d+)\s*([А-ЯІЇЄҐA-Z][А-ЯІЇЄҐа-яіїєґA-Za-z\s'’«»\-]*?)\s*(?=(?:[1-9]|1[0-2]|Н)\s*(?:\(|,|$|\s))([\s\S]*?)$/g;
+        let journalMatch = regexJournal.exec(trimmedLine);
+        if (journalMatch) {
+            let subjectName = journalMatch[2].trim().replace(/[\n\t]+/g, ' ').replace(/\s{2,}/g, ' ');
+            let rawGrades = journalMatch[3].trim();
+            if (subjectName && /\d/.test(rawGrades)) {
+                semestersData[currentSemester].push({ name: subjectName, grades: rawGrades });
+                addedCount++;
             }
         }
     });
@@ -434,7 +444,7 @@ document.getElementById('parse-btn').addEventListener('click', () => {
 
 
 // =========================================================================
-// 8. СЛУХАЧІ КНОПОК ТА ЗАВАНТАЖЕННЯ СУТНОСТІ СТОРІНКИ (ONLOAD)
+// 8. СЛУХАЧІ КНОПОК ТА ЗАВАНТАЖЕННЯ СТОРІНКИ (ONLOAD)
 // =========================================================================
 document.getElementById('add-subject-btn').addEventListener('click', () => {
     const name = document.getElementById('new-subject-name').value.trim();
