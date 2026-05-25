@@ -8,8 +8,8 @@ const translations = {
         new_email_ph: "Нова електронна пошта", new_pass_ph: "Придумайте пароль", register_btn: "Створити акаунт", has_account: "Вже маєте акаунт?",
         login_link: "Увійти", welcome: "Вітаємо,", settings: "Налаштування", logout: "Вийти", sys_old: "Стара система (Всі оцінки)",
         sys_new: "Нова система (Тільки ГР)", sem_1: "І Семестр", sem_2: "ІІ Семестр", sem_annual: "Річні оцінки",
-        import_title: "🚀 Швидкий імпорт з журналу", import_hint: "Вставте скопійовані оцінки. Скрипт автоматично приєднає оцінки за зошит/онлайн до правильного предмета.",
-        import_ph: "Вставте текст стовпчиком сюди...", parse_btn: "Розпізнати оцінки", spec_title: "🎯 Аналіз за профілем",
+        import_title: "🚀 Швидкий імпорт з журналу", import_hint: "Вставте текст стовпчиком. Скрипт автоматично вичистить зайві слова в дужках.",
+        import_ph: "Вставте скопійовані оцінки сюди...", parse_btn: "Розпізнати оцінки", spec_title: "🎯 Аналіз за профілем",
         spec_ph: "Оберіть профіль...", add_title: "➕ Додати предмет вручну", add_ph: "Назва предмету",
         add_btn: "Додати", clear_btn: "Очистити семестр", total_gpa_sem: "Загальний середній бал:", total_gpa_ann: "Загальний середній річний бал:",
         settings_title: "⚙️ Налаштування", theme_label: "Тема оформлення:", theme_light: "Світла", theme_dark: "Темна", lang_label: "Мова інтерфейсу:",
@@ -26,7 +26,7 @@ const translations = {
 
 
 // =========================================================================
-// 2. КОНФІГУРАЦІЯ FIREBASE (З ЗАХИСТОМ ВІД ПАДІННЯ)
+// 2. ГЛОБАЛЬНИЙ СТАН ТА КОНФІГУРАЦІЯ FIREBASE
 // =========================================================================
 let currentLang = localStorage.getItem('smart_grades_lang') || 'uk';
 let currentTheme = localStorage.getItem('smart_grades_theme') || 'light';
@@ -54,12 +54,12 @@ try {
         isFirebaseConnected = true;
     }
 } catch (e) {
-    console.error("Firebase офлайн, працюємо локально.", e);
+    console.error("Firebase SDK не завантажився. Переведено в локальний режим.", e);
 }
 
 
 // =========================================================================
-// 3. ДОПОМІЖНІ ФУНКЦІЇ ТА UI
+// 3. ДОПОМІЖНІ УТИЛІТИ
 // =========================================================================
 function t(key) { return translations[currentLang][key] || key; }
 function encodeEmail(email) { return email.replace(/\./g, ','); }
@@ -82,12 +82,7 @@ function applyTranslations() {
 
 function openSettings() { document.getElementById('theme-selector').value = currentTheme; document.getElementById('lang-selector').value = currentLang; document.getElementById('settings-modal').classList.add('show'); }
 function closeSettings() { document.getElementById('settings-modal').classList.remove('show'); }
-
-window.changeTheme = function(theme) {
-    currentTheme = theme; localStorage.setItem('smart_grades_theme', theme);
-    if(theme === 'dark') document.body.classList.add('dark-theme'); else document.body.classList.remove('dark-theme');
-};
-
+window.changeTheme = function(theme) { currentTheme = theme; localStorage.setItem('smart_grades_theme', theme); if(theme === 'dark') document.body.classList.add('dark-theme'); else document.body.classList.remove('dark-theme'); };
 window.changeLanguage = function(lang) { currentLang = lang; localStorage.setItem('smart_grades_lang', lang); applyTranslations(); };
 
 function customConfirm(message, onConfirmCallback) {
@@ -96,54 +91,39 @@ function customConfirm(message, onConfirmCallback) {
     document.getElementById('confirm-cancel-btn').onclick = () => { modal.classList.remove('show'); };
 }
 
-function showInlineMessage(text, isError = false) {
-    const msgEl = document.getElementById('import-msg'); 
-    if (msgEl) { msgEl.textContent = text; msgEl.className = 'inline-msg ' + (isError ? 'error' : 'success'); setTimeout(() => msgEl.className = 'inline-msg', 4000); }
-}
-
-function showToast(text) { 
-    const toast = document.getElementById('toast-overlay'); const msgEl = document.getElementById('toast-msg');
-    if (toast && msgEl) { msgEl.textContent = text; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
-}
+function showInlineMessage(text, isError = false) { const msgEl = document.getElementById('import-msg'); if (msgEl) { msgEl.textContent = text; msgEl.className = 'inline-msg ' + (isError ? 'error' : 'success'); setTimeout(() => msgEl.className = 'inline-msg', 3000); } }
+function showToast(text) { const toast = document.getElementById('toast-overlay'); const msgEl = document.getElementById('toast-msg'); if (toast && msgEl) { msgEl.textContent = text; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); } }
 
 
 // =========================================================================
-// 4. АВТОРИЗАЦІЯ ТА АДМІН-ПАНЕЛЬ
+// 4. СИСТЕМА АВТОРИЗАЦІЇ
 // =========================================================================
-function toggleAuthMode() {
-    const loginForm = document.getElementById('login-form'); const regForm = document.getElementById('register-form'); document.getElementById('auth-msg').textContent = '';
-    if (loginForm.style.display === 'none') { loginForm.style.display = 'block'; regForm.style.display = 'none'; } else { loginForm.style.display = 'none'; regForm.style.display = 'block'; }
-}
+function toggleAuthMode() { const loginForm = document.getElementById('login-form'); const regForm = document.getElementById('register-form'); document.getElementById('auth-msg').textContent = ''; if (loginForm.style.display === 'none') { loginForm.style.display = 'block'; regForm.style.display = 'none'; } else { loginForm.style.display = 'none'; regForm.style.display = 'block'; } }
 function showAuthError(text) { const msg = document.getElementById('auth-msg'); msg.textContent = text; msg.style.opacity = 1; }
 
 function register() {
     const email = document.getElementById('reg-email').value.trim().toLowerCase(); const password = document.getElementById('reg-password').value;
-    if (!email || !password) return showAuthError("Заповніть всі поля!");
-    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) return showAuthError(t('invalid_email'));
+    if (!email || !password) return showAuthError("Заповніть всі поля!"); if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) return showAuthError(t('invalid_email'));
     if (!isFirebaseConnected) return loginUser(email);
-
     const encEmail = encodeEmail(email);
     database.ref('users/' + encEmail).once('value').then((snapshot) => { if (snapshot.exists()) showAuthError("Акаунт вже існує!"); else database.ref('users/' + encEmail).set({ password: password }).then(() => { loginUser(email); }); });
 }
 
 function login() {
     const email = document.getElementById('login-email').value.trim().toLowerCase(); const password = document.getElementById('login-password').value;
-    if (!email || !password) return showAuthError("Заповніть всі поля!");
-    if (!isFirebaseConnected) return loginUser(email);
-
+    if (!email || !password) return showAuthError("Заповніть всі поля!"); if (!isFirebaseConnected) return loginUser(email);
     const encEmail = encodeEmail(email);
-    database.ref('users/' + encEmail).once('value').then((snapshot) => { const userData = snapshot.val(); if (userData && userData.password === password) loginUser(email); else showAuthError("Невірна пошта/пароль!"); });
+    database.ref('users/' + encEmail).once('value').then((snapshot) => { const userData = snapshot.val(); if (userData && userData.password === password) loginUser(email); else showAuthError("Невірна пошта або пароль!"); });
 }
 
 function loginUser(email) {
     currentUserEmail = email; localStorage.setItem('smart_grades_current_user', email);
     document.getElementById('auth-screen').style.display = 'none'; document.getElementById('app-screen').style.display = 'block'; document.getElementById('user-display-email').textContent = email;
-    
     if (isFirebaseConnected) {
-        database.ref('users/' + encodeEmail(email)).on('value', (snapshot) => { if (!snapshot.exists()) { document.getElementById('deleted-modal').classList.add('show'); localStorage.removeItem('smart_grades_current_user'); } });
+        const encEmail = encodeEmail(email);
+        database.ref('users/' + encEmail).on('value', (snapshot) => { if (!snapshot.exists()) { document.getElementById('deleted-modal').classList.add('show'); localStorage.removeItem('smart_grades_current_user'); } });
         const devBtn = document.getElementById('dev-nav-btn');
-        if (adminEmails.includes(email)) { devBtn.style.display = 'inline-block'; database.ref('users').on('value', () => { renderAdminConsole(); }); } 
-        else { devBtn.style.display = 'none'; database.ref('users').off(); }
+        if (adminEmails.includes(email)) { devBtn.style.display = 'inline-block'; database.ref('users').on('value', () => { renderAdminConsole(); }); } else { devBtn.style.display = 'none'; document.getElementById('dev-console-card').style.display = 'none'; database.ref('users').off(); }
     }
     loadFromFirebase();
 }
@@ -151,12 +131,10 @@ function loginUser(email) {
 function logout() {
     if (isFirebaseConnected) { database.ref('users').off(); if(currentUserEmail) database.ref('grades/' + encodeEmail(currentUserEmail)).off(); }
     currentUserEmail = null; localStorage.removeItem('smart_grades_current_user');
-    document.getElementById('app-screen').style.display = 'none'; document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('dev-nav-btn').style.display = 'none'; document.getElementById('dev-console-card').style.display = 'none'; semestersData = { 1: [], 2: [] }; renderSubjects();
+    document.getElementById('app-screen').style.display = 'none'; document.getElementById('auth-screen').style.display = 'flex'; document.getElementById('dev-nav-btn').style.display = 'none'; document.getElementById('dev-console-card').style.display = 'none'; semestersData = { 1: [], 2: [] }; renderSubjects();
 }
 
 window.toggleDevConsole = function() { const devConsole = document.getElementById('dev-console-card'); if (devConsole.style.display === 'none') { devConsole.style.display = 'block'; devConsole.scrollIntoView({ behavior: 'smooth' }); } else devConsole.style.display = 'none'; };
-
 function renderAdminConsole() {
     if (!isFirebaseConnected) return; const tbody = document.getElementById('dev-users-list'); tbody.innerHTML = '';
     database.ref('users').once('value').then((usersSnapshot) => {
@@ -174,13 +152,11 @@ function renderAdminConsole() {
         });
     });
 }
-window.deleteUserAdmin = function(emailToDelete) {
-    if (!isFirebaseConnected) return; customConfirm(`Видалити акаунт ${emailToDelete}?`, () => { database.ref('users/' + encodeEmail(emailToDelete)).remove(); database.ref('grades/' + encodeEmail(emailToDelete)).remove(); showToast(`Видалено!`); if (emailToDelete === currentUserEmail) logout(); });
-};
+window.deleteUserAdmin = function(emailToDelete) { if (!isFirebaseConnected) return; customConfirm(`Видалити акаунт ${emailToDelete} з Firebase глобально?`, () => { const encEmail = encodeEmail(emailToDelete); database.ref('users/' + encEmail).remove(); database.ref('grades/' + encEmail).remove(); showToast(`Видалено!`); if (emailToDelete === currentUserEmail) logout(); }); };
 
 
 // =========================================================================
-// 5. ОБЧИСЛЕННЯ ОЦІНОК ТА РЕНДЕР
+// 5. ОБЧИСЛЕННЯ ОЦІНОК (НАВЧЕНО ІГНОРУВАТИ ДУЖКИ!)
 // =========================================================================
 let currentSemester = 1; let gradingSystem = 'new'; let semestersData = { 1: [], 2: [] };
 const specialtyCategories = [
@@ -194,18 +170,24 @@ const specialtyCategories = [
 function loadFromFirebase() {
     if (!currentUserEmail) return;
     if (isFirebaseConnected) {
-        database.ref('grades/' + encodeEmail(currentUserEmail)).on('value', (snapshot) => {
+        const encEmail = encodeEmail(currentUserEmail);
+        database.ref('grades/' + encEmail).on('value', (snapshot) => {
             const data = snapshot.val() || {}; semestersData[1] = data.sem1 || []; semestersData[2] = data.sem2 || []; gradingSystem = data.system || 'new';
             const toggle = document.getElementById('grading-system-toggle'); if (toggle) toggle.checked = (gradingSystem === 'new');
             document.getElementById('label-old').classList.toggle('active-text', gradingSystem === 'old'); document.getElementById('label-new').classList.toggle('active-text', gradingSystem === 'new');
             applyTranslations();
         });
-    } else { applyTranslations(); }
+    } else {
+        const localGrades = localStorage.getItem('local_grades_' + currentUserEmail);
+        if (localGrades) { const parsed = JSON.parse(localGrades); semestersData[1] = parsed.sem1 || []; semestersData[2] = parsed.sem2 || []; }
+        applyTranslations();
+    }
 }
 
 function saveToFirebase() {
     if (!currentUserEmail) return;
-    if (isFirebaseConnected) database.ref('grades/' + encodeEmail(currentUserEmail)).set({ sem1: semestersData[1], sem2: semestersData[2], system: gradingSystem });
+    if (isFirebaseConnected) { database.ref('grades/' + encodeEmail(currentUserEmail)).set({ sem1: semestersData[1], sem2: semestersData[2], system: gradingSystem }); } 
+    else { localStorage.setItem('local_grades_' + currentUserEmail, JSON.stringify({ sem1: semestersData[1], sem2: semestersData[2] })); }
     renderSubjects();
 }
 
@@ -214,12 +196,26 @@ window.switchSemester = function(semesterNum) { currentSemester = semesterNum; d
 
 function calculateAverage(gradesString) {
     let sum = 0; let count = 0;
+    
     if (gradingSystem === 'new') {
-        if (!gradesString.includes('(')) { const rawItems = gradesString.split(/[\s,]+/); rawItems.forEach(item => { const num = parseFloat(item.trim()); if (!isNaN(num) && num >= 1 && num <= 12) { sum += num; count++; } }); } 
-        else { const regexGR = /\b([1-9]|1[0-2])\s*\([^)]*ГР[^)]*\)/gi; const matches = [...gradesString.matchAll(regexGR)]; matches.forEach(m => { sum += parseFloat(m[1]); count++; }); }
+        const hasGR = /ГР/i.test(gradesString); // Якщо в дужках написано ГР
+        if (hasGR) {
+            const regexGR = /\b([1-9]|1[0-2])\s*\([^)]*ГР[^)]*\)/gi; 
+            const matches = [...gradesString.matchAll(regexGR)]; 
+            matches.forEach(m => { sum += parseFloat(m[1]); count++; });
+        } else {
+            // Якщо ГР немає, рахуємо всі оцінки, АЛЕ ІГНОРУЄМО ВСЕ В ДУЖКАХ "(Зошит: 7)"
+            let cleanString = gradesString.replace(/\([^)]*\)/g, ' ').replace(/\[[^\]]*\]/g, ' '); 
+            const rawItems = cleanString.split(/[\s,]+/); 
+            rawItems.forEach(item => { const num = parseFloat(item.trim()); if (!isNaN(num) && num >= 1 && num <= 12) { sum += num; count++; } });
+        }
     } else {
-        let stringWithoutParens = gradesString.replace(/\([^)]*\)/g, ' '); const rawItems = stringWithoutParens.split(/[\s,]+/); rawItems.forEach(item => { const num = parseFloat(item.trim()); if (!isNaN(num) && num >= 1 && num <= 12) { sum += num; count++; } });
+        // Стара система: рахуємо всі оцінки, АЛЕ ТАКОЖ ІГНОРУЄМО ДУЖКИ
+        let cleanString = gradesString.replace(/\([^)]*\)/g, ' ').replace(/\[[^\]]*\]/g, ' '); 
+        const rawItems = cleanString.split(/[\s,]+/);
+        rawItems.forEach(item => { const num = parseFloat(item.trim()); if (!isNaN(num) && num >= 1 && num <= 12) { sum += num; count++; } });
     }
+    
     if (count === 0) return { average: 0, count: 0, semesterGrade: 0 };
     return { average: +(sum / count).toFixed(2), count: count, semesterGrade: Math.round(sum / count) };
 }
@@ -286,7 +282,7 @@ function renderSubjects() {
 
 
 // =========================================================================
-// 6. РОЗУМНИЙ ПАРСЕР ОЦІНОК (ОБ'ЄДНУЄ ЗОШИТИ ТА ОНЛАЙН-ОЦІНКИ)
+// 6. РОЗУМНИЙ ПАРСЕР ОЦІНОК (ОБ'ЄДНУЄ ЗОШИТИ В ДУЖКАХ)
 // =========================================================================
 document.getElementById('parse-btn').addEventListener('click', () => {
     const rawText = document.getElementById('import-text').value; 
@@ -296,8 +292,8 @@ document.getElementById('parse-btn').addEventListener('click', () => {
     let appendedCount = 0;
     const lines = rawText.replace(/\r/g, '').split('\n');
 
-    // Словник "сміттєвих" підтем з електронних журналів, які ми приєднуємо до основного предмета
-    const subTopics = ['зош', 'онлайн', 'тема', 'гр', 'робота', 'урок', 'дз', 'оцінка', 'контрольна', 'самостійна', 'практична', 'лабораторна', 'зошит', 'проєкт', 'тест', 'ведення', 'діагностична', 'ср', 'кр', 'пр', 'лр'];
+    // Ключові слова, які ми вважаємо не окремим предметом, а "темою" для попереднього предмета
+    const subTopics = ['зош', 'онлайн', 'тема', 'гр', 'робота', 'урок', 'дз', 'оцінка', 'контрольна', 'самостійна', 'практична', 'лабораторна', 'зошит', 'проєкт', 'тест', 'ведення', 'ср', 'кр', 'пр', 'лр'];
 
     let lastSubjectRef = null;
 
@@ -305,10 +301,10 @@ document.getElementById('parse-btn').addEventListener('click', () => {
         let trimmedLine = line.trim();
         if (!trimmedLine) return;
 
-        // Зрізаємо нумерацію (напр. "1. ")
+        // Видаляємо номери (напр. "1. ")
         trimmedLine = trimmedLine.replace(/^[\d.\s\)]+\s/, '').trim();
 
-        // 1. Якщо рядок - це лише самі оцінки без тексту (напр. "5 5 5")
+        // 1. Якщо рядок складається ЛИШЕ З ЦИФР (напр. "5 5 5") - плюсуємо їх до останнього предмета
         if (/^[\d\s,.\t]+$/.test(trimmedLine)) {
             if (lastSubjectRef) {
                 let cleanGrades = trimmedLine.replace(/[.,\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
@@ -318,28 +314,31 @@ document.getElementById('parse-btn').addEventListener('click', () => {
             return;
         }
 
-        // 2. Шукаємо оцінки на самому кінці рядка
+        // 2. Шукаємо будь-який текст і оцінки в кінці
         const matchGrades = trimmedLine.match(/(.*?)([\d\s,.\t]+)$/);
         
         if (matchGrades) {
-            let textPart = matchGrades[1].trim(); // Текст (Назва або Підтема)
-            let gradesPart = matchGrades[2].trim().replace(/[.,\t]+/g, ' ').replace(/\s{2,}/g, ' '); // Оцінки
+            let textPart = matchGrades[1].trim(); 
+            let gradesPart = matchGrades[2].trim().replace(/[.,\t]+/g, ' ').replace(/\s{2,}/g, ' '); 
 
-            // Нормалізуємо текст, щоб знайти підтеми (тільки літери нижнього регістру)
             let normalizedText = textPart.toLowerCase().replace(/[^а-яіїєґa-z]/g, '');
 
-            // ЯКЩО ЦЕ ПІДТЕМА ("Зош)", "Онлайн)", "Тема 1") -> Плюсуємо оцінку до останнього предмета
-            if (subTopics.includes(normalizedText) || (textPart.startsWith('(') && textPart.endsWith(')'))) {
+            // ЯКЩО ЦЕ ПІДТЕМА ("Зош)", "Онлайн)") -> Прикріплюємо в дужках до останнього предмета!
+            if (subTopics.includes(normalizedText) || textPart.includes(')') || textPart.includes('(')) {
                 if (lastSubjectRef && /\d/.test(gradesPart)) {
-                    lastSubjectRef.grades += " " + gradesPart;
+                    // Робимо красиву назву, напр: "Зош)" -> "Зош"
+                    let label = textPart.replace(/[()]/g, '').trim();
+                    if (!label) label = "Оцінка";
+                    label = label.charAt(0).toUpperCase() + label.slice(1);
+                    
+                    // Додаємо в поле оцінок: "8 9 (Зош: 7)"
+                    lastSubjectRef.grades += ` (${label}: ${gradesPart})`;
                     appendedCount++;
                 }
             } 
-            // ЯКЩО ЦЕ СПРАВЖНІЙ НОВИЙ ПРЕДМЕТ -> Створюємо картку
+            // ЯКЩО ЦЕ СПРАВЖНІЙ ПРЕДМЕТ -> Створюємо новий
             else if (textPart.length > 1) {
-                // Видаляємо дужки та всередині них, щоб назва була чистою: "Алгебра (онлайн)" -> "Алгебра"
                 let cleanSubject = textPart.replace(/\(.*\)/g, '').replace(/[()]/g, '').trim();
-                
                 if (/\d/.test(gradesPart)) {
                     let newSubj = { name: cleanSubject, grades: gradesPart };
                     semestersData[currentSemester].push(newSubj);
@@ -353,7 +352,7 @@ document.getElementById('parse-btn').addEventListener('click', () => {
     if (addedCount > 0 || appendedCount > 0) { 
         document.getElementById('import-text').value = ''; 
         saveToFirebase(); 
-        showInlineMessage(`Успіх! Додано предметів: ${addedCount} (+ ${appendedCount} додаткових оцінок).`); 
+        showInlineMessage(`Розпізнано: ${addedCount} предметів (+ ${appendedCount} дод. оцінок).`); 
     } else {
         showInlineMessage(t('msg_error'), true);
     }
