@@ -156,7 +156,7 @@ window.deleteUserAdmin = function(emailToDelete) { if (!isFirebaseConnected) ret
 
 
 // =========================================================================
-// 5. ОБЧИСЛЕННЯ ОЦІНОК (НАВЧЕНО ІГНОРУВАТИ ДУЖКИ!)
+// 5. ОБЧИСЛЕННЯ ОЦІНОК (ТЕПЕР БАЧИТЬ СЕМЕСТРОВУ ОЦІНКУ!)
 // =========================================================================
 let currentSemester = 1; let gradingSystem = 'new'; let semestersData = { 1: [], 2: [] };
 const specialtyCategories = [
@@ -197,27 +197,49 @@ window.switchSemester = function(semesterNum) { currentSemester = semesterNum; d
 function calculateAverage(gradesString) {
     let sum = 0; let count = 0;
     
+    // 1. ШУКАЄМО ЖОРСТКУ СЕМЕСТРОВУ ОЦІНКУ (Сем.С, Семестрова, Скоригована)
+    let explicitSemester = null;
+    const semRegex = /(?:Сем\.?С?|Семестрова|Скоригована)[^\d]*([1-9]|1[0-2])\b/i;
+    const semMatch = gradesString.match(semRegex);
+    
+    let stringToParse = gradesString;
+    
+    if (semMatch) {
+        explicitSemester = parseFloat(semMatch[1]);
+        // Вирізаємо її з рядка, щоб вона не враховувалась як звичайна оцінка
+        stringToParse = stringToParse.replace(semRegex, ' ');
+    }
+
+    // 2. РАХУЄМО ЗВИЧАЙНІ ОЦІНКИ
     if (gradingSystem === 'new') {
-        const hasGR = /ГР/i.test(gradesString); // Якщо в дужках написано ГР
+        const hasGR = /ГР/i.test(stringToParse);
         if (hasGR) {
             const regexGR = /\b([1-9]|1[0-2])\s*\([^)]*ГР[^)]*\)/gi; 
-            const matches = [...gradesString.matchAll(regexGR)]; 
+            const matches = [...stringToParse.matchAll(regexGR)]; 
             matches.forEach(m => { sum += parseFloat(m[1]); count++; });
         } else {
-            // Якщо ГР немає, рахуємо всі оцінки, АЛЕ ІГНОРУЄМО ВСЕ В ДУЖКАХ "(Зошит: 7)"
-            let cleanString = gradesString.replace(/\([^)]*\)/g, ' ').replace(/\[[^\]]*\]/g, ' '); 
+            // Ігноруємо все в дужках "(Зош: 7)"
+            let cleanString = stringToParse.replace(/\([^)]*\)/g, ' ').replace(/\[[^\]]*\]/g, ' '); 
             const rawItems = cleanString.split(/[\s,]+/); 
             rawItems.forEach(item => { const num = parseFloat(item.trim()); if (!isNaN(num) && num >= 1 && num <= 12) { sum += num; count++; } });
         }
     } else {
-        // Стара система: рахуємо всі оцінки, АЛЕ ТАКОЖ ІГНОРУЄМО ДУЖКИ
-        let cleanString = gradesString.replace(/\([^)]*\)/g, ' ').replace(/\[[^\]]*\]/g, ' '); 
+        let cleanString = stringToParse.replace(/\([^)]*\)/g, ' ').replace(/\[[^\]]*\]/g, ' '); 
         const rawItems = cleanString.split(/[\s,]+/);
         rawItems.forEach(item => { const num = parseFloat(item.trim()); if (!isNaN(num) && num >= 1 && num <= 12) { sum += num; count++; } });
     }
     
-    if (count === 0) return { average: 0, count: 0, semesterGrade: 0 };
-    return { average: +(sum / count).toFixed(2), count: count, semesterGrade: Math.round(sum / count) };
+    let finalAvg = count === 0 ? 0 : +(sum / count).toFixed(2);
+    let finalSem = count === 0 ? 0 : Math.round(sum / count);
+
+    // 3. ЯКЩО Є ЯВНА СЕМЕСТРОВА ОЦІНКА - ВОНА ПЕРЕБИВАЄ УСЕ!
+    if (explicitSemester !== null) {
+        finalSem = explicitSemester;
+        finalAvg = explicitSemester; // Середній бал також підтягується під неї
+        if (count === 0) count = 1; // Щоб предмет зарахувався в загальний GPA
+    }
+
+    return { average: finalAvg, count: count, semesterGrade: finalSem, isExplicit: explicitSemester !== null };
 }
 
 function getAnnualSubjects() {
@@ -271,8 +293,14 @@ function renderSubjects() {
         if (!activeSubjects || activeSubjects.length === 0) { listElement.innerHTML = `<p style="text-align:center; color:gray; padding: 20px;">${t('empty_data')}</p>`; } 
         else {
             activeSubjects.forEach((subject, index) => {
-                const stats = calculateAverage(subject.grades); const el = document.createElement('div'); el.className = 'subject-item';
-                el.innerHTML = `<div class="subject-header"><span>${subject.name}</span><button class="delete-btn" onclick="deleteSubject(${index})">${t('delete_btn')}</button></div><div class="grades-input-wrapper"><input type="text" value="${subject.grades}" placeholder="${t('grades_ph')}" oninput="updateGrades(${index}, this.value)"></div><div class="subject-stats"><span class="hint">${t('grade_count')} ${stats.count}</span><div class="stats-group"><span>${t('avg_score')} <span class="average-badge">${stats.average.toFixed(2)}</span></span><span>${t('sem_score')} <span class="semester-badge">${stats.semesterGrade || 'Н/А'}</span></span></div></div>`;
+                const stats = calculateAverage(subject.grades); 
+                const el = document.createElement('div'); el.className = 'subject-item';
+                
+                // Стиль для підтвердженої семестрової оцінки
+                let explicitStyle = stats.isExplicit ? 'background-color: #10B981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);' : '';
+                let explicitIcon = stats.isExplicit ? '🎯 ' : '';
+
+                el.innerHTML = `<div class="subject-header"><span>${subject.name}</span><button class="delete-btn" onclick="deleteSubject(${index})">${t('delete_btn')}</button></div><div class="grades-input-wrapper"><input type="text" value="${subject.grades}" placeholder="${t('grades_ph')}" oninput="updateGrades(${index}, this.value)"></div><div class="subject-stats"><span class="hint">${t('grade_count')} ${stats.count}</span><div class="stats-group"><span>${t('avg_score')} <span class="average-badge">${stats.average.toFixed(2)}</span></span><span>${t('sem_score')} <span class="semester-badge" style="${explicitStyle}">${explicitIcon}${stats.semesterGrade || 'Н/А'}</span></span></div></div>`;
                 listElement.appendChild(el);
             });
         }
@@ -282,7 +310,7 @@ function renderSubjects() {
 
 
 // =========================================================================
-// 6. РОЗУМНИЙ ПАРСЕР ОЦІНОК (ОБ'ЄДНУЄ ЗОШИТИ В ДУЖКАХ)
+// 6. РОЗУМНИЙ ПАРСЕР ОЦІНОК (ЗБИРАЄ ДУЖКИ І СЕМЕСТРОВІ ОЦІНКИ)
 // =========================================================================
 document.getElementById('parse-btn').addEventListener('click', () => {
     const rawText = document.getElementById('import-text').value; 
@@ -292,8 +320,8 @@ document.getElementById('parse-btn').addEventListener('click', () => {
     let appendedCount = 0;
     const lines = rawText.replace(/\r/g, '').split('\n');
 
-    // Ключові слова, які ми вважаємо не окремим предметом, а "темою" для попереднього предмета
-    const subTopics = ['зош', 'онлайн', 'тема', 'гр', 'робота', 'урок', 'дз', 'оцінка', 'контрольна', 'самостійна', 'практична', 'лабораторна', 'зошит', 'проєкт', 'тест', 'ведення', 'ср', 'кр', 'пр', 'лр'];
+    // Ключові слова, які ми прикріплюємо до основного предмета
+    const subTopics = ['зош', 'онлайн', 'тема', 'гр', 'робота', 'урок', 'дз', 'оцінка', 'контрольна', 'самостійна', 'практична', 'лабораторна', 'зошит', 'проєкт', 'тест', 'ведення', 'ср', 'кр', 'пр', 'лр', 'сем', 'семс', 'семестрова', 'семестр', 'скоригована'];
 
     let lastSubjectRef = null;
 
@@ -301,10 +329,10 @@ document.getElementById('parse-btn').addEventListener('click', () => {
         let trimmedLine = line.trim();
         if (!trimmedLine) return;
 
-        // Видаляємо номери (напр. "1. ")
+        // Видаляємо нумерацію
         trimmedLine = trimmedLine.replace(/^[\d.\s\)]+\s/, '').trim();
 
-        // 1. Якщо рядок складається ЛИШЕ З ЦИФР (напр. "5 5 5") - плюсуємо їх до останнього предмета
+        // 1. Лише оцінки
         if (/^[\d\s,.\t]+$/.test(trimmedLine)) {
             if (lastSubjectRef) {
                 let cleanGrades = trimmedLine.replace(/[.,\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
@@ -314,7 +342,7 @@ document.getElementById('parse-btn').addEventListener('click', () => {
             return;
         }
 
-        // 2. Шукаємо будь-який текст і оцінки в кінці
+        // 2. Будь-який текст + оцінки
         const matchGrades = trimmedLine.match(/(.*?)([\d\s,.\t]+)$/);
         
         if (matchGrades) {
@@ -323,20 +351,18 @@ document.getElementById('parse-btn').addEventListener('click', () => {
 
             let normalizedText = textPart.toLowerCase().replace(/[^а-яіїєґa-z]/g, '');
 
-            // ЯКЩО ЦЕ ПІДТЕМА ("Зош)", "Онлайн)") -> Прикріплюємо в дужках до останнього предмета!
+            // ЯКЩО ЦЕ ПІДТЕМА АБО СЕМЕСТРОВА ("Зош)", "Сем.С") -> Прикріплюємо в дужках!
             if (subTopics.includes(normalizedText) || textPart.includes(')') || textPart.includes('(')) {
                 if (lastSubjectRef && /\d/.test(gradesPart)) {
-                    // Робимо красиву назву, напр: "Зош)" -> "Зош"
                     let label = textPart.replace(/[()]/g, '').trim();
                     if (!label) label = "Оцінка";
-                    label = label.charAt(0).toUpperCase() + label.slice(1);
+                    label = label.charAt(0).toUpperCase() + label.slice(1); // Робимо з великої літери
                     
-                    // Додаємо в поле оцінок: "8 9 (Зош: 7)"
                     lastSubjectRef.grades += ` (${label}: ${gradesPart})`;
                     appendedCount++;
                 }
             } 
-            // ЯКЩО ЦЕ СПРАВЖНІЙ ПРЕДМЕТ -> Створюємо новий
+            // ЯКЩО ЦЕ НОВИЙ ПРЕДМЕТ
             else if (textPart.length > 1) {
                 let cleanSubject = textPart.replace(/\(.*\)/g, '').replace(/[()]/g, '').trim();
                 if (/\d/.test(gradesPart)) {
@@ -360,7 +386,7 @@ document.getElementById('parse-btn').addEventListener('click', () => {
 
 
 // =========================================================================
-// 7. СЛУХАЧІ КНОПОК ТА ЗАВАНТАЖЕННЯ СТОРІНКИ
+// 7. СЛУХАЧІ КНОПОК
 // =========================================================================
 document.getElementById('add-subject-btn').addEventListener('click', () => {
     const name = document.getElementById('new-subject-name').value.trim();
