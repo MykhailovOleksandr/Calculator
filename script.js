@@ -156,7 +156,7 @@ window.deleteUserAdmin = function(emailToDelete) { if (!isFirebaseConnected) ret
 
 
 // =========================================================================
-// 5. ОБЧИСЛЕННЯ ОЦІНОК (ІГНОРУЄ ЗОШИТИ ТА ОНЛАЙН-БАЛИ)
+// 5. ОБЧИСЛЕННЯ ОЦІНОК (СЕМ.С БЕРЕТЬСЯ, ІНАКШЕ РАХУЮТЬСЯ ЗВИЧАЙНІ)
 // =========================================================================
 let currentSemester = 1; let gradingSystem = 'new'; let semestersData = { 1: [], 2: [] };
 const specialtyCategories = [
@@ -197,18 +197,18 @@ window.switchSemester = function(semesterNum) { currentSemester = semesterNum; d
 function calculateAverage(gradesString) {
     let sum = 0; let count = 0;
     
-    // 1. ШУКАЄМО СЕМЕСТРОВУ ОЦІНКУ (Сем.С, Семестрова)
+    // 1. ШУКАЄМО ЧИ Є "СЕМ.С" АБО СЕМЕСТРОВА
     let explicitSemester = null;
-    const semRegex = /(?:Сем\.?С?|Семестрова|Скоригована)[^\d]*([1-9]|1[0-2])\b/i;
+    const semRegex = /(?:Сем\.?\s*С?|Семестрова|Семестр|Скоригована)[^\d]*([1-9]|1[0-2])\b/i;
     const semMatch = gradesString.match(semRegex);
     
     let stringToParse = gradesString;
     if (semMatch) {
-        explicitSemester = parseFloat(semMatch[1]);
-        stringToParse = stringToParse.replace(semRegex, ' '); // Вирізаємо з розрахунку
+        explicitSemester = parseFloat(semMatch[1]); // Запам'ятовуємо цю оцінку
+        stringToParse = stringToParse.replace(semRegex, ' '); // Вирізаємо, щоб вона не рахувалась двічі
     }
 
-    // 2. ІГНОРУЄМО Зошит, Онлайн (навіть якщо вони написані без дужок)
+    // 2. РАХУЄМО ВСІ ПОТОЧНІ (ІГНОРУЮЧИ ЗОШИТИ ТА ЕНКИ)
     if (gradingSystem === 'new') {
         const hasGR = /ГР/i.test(stringToParse);
         if (hasGR) {
@@ -216,31 +216,45 @@ function calculateAverage(gradesString) {
             const matches = [...stringToParse.matchAll(regexGR)]; 
             matches.forEach(m => { sum += parseFloat(m[1]); count++; });
         } else {
-            // Видаляємо дужки та слова-винятки разом із їх оцінкою
+            // Видаляємо дужки і слова типу "зош"
             let cleanString = stringToParse.replace(/\([^)]*\)/g, ' ').replace(/\[[^\]]*\]/g, ' '); 
             cleanString = cleanString.replace(/(?:зош|онлайн|тема|дз|кр|ср|пр|лр|оцінка)[а-яіїєґa-z.:-]*\s*([1-9]|1[0-2])\b/gi, ' ');
             
             const rawItems = cleanString.split(/[\s,]+/); 
-            rawItems.forEach(item => { const num = parseFloat(item.trim()); if (!isNaN(num) && num >= 1 && num <= 12) { sum += num; count++; } });
+            rawItems.forEach(item => { 
+                const num = parseFloat(item.trim()); 
+                // Літери "Н" (NaN) автоматично відкидаються
+                if (!isNaN(num) && num >= 1 && num <= 12) { sum += num; count++; } 
+            });
         }
     } else {
         let cleanString = stringToParse.replace(/\([^)]*\)/g, ' ').replace(/\[[^\]]*\]/g, ' '); 
         cleanString = cleanString.replace(/(?:зош|онлайн|тема|дз|кр|ср|пр|лр|оцінка)[а-яіїєґa-z.:-]*\s*([1-9]|1[0-2])\b/gi, ' ');
         const rawItems = cleanString.split(/[\s,]+/);
-        rawItems.forEach(item => { const num = parseFloat(item.trim()); if (!isNaN(num) && num >= 1 && num <= 12) { sum += num; count++; } });
+        rawItems.forEach(item => { 
+            const num = parseFloat(item.trim()); 
+            if (!isNaN(num) && num >= 1 && num <= 12) { sum += num; count++; } 
+        });
     }
     
     let finalAvg = count === 0 ? 0 : +(sum / count).toFixed(2);
     let finalSem = count === 0 ? 0 : Math.round(sum / count);
 
-    // 3. СЕМЕСТРОВА ОЦІНКА МАЄ НАЙВИЩИЙ ПРІОРИТЕТ
+    // 3. ЯКЩО Є СЕМЕСТРОВА ОЦІНКА - ВОНА ПЕРЕБИВАЄ СЕМЕСТР, АЛЕ АВЕРЕДЖ ЗАЛИШАЄТЬСЯ СТАРУ
     if (explicitSemester !== null) {
         finalSem = explicitSemester;
-        finalAvg = explicitSemester;
-        if (count === 0) count = 1; // Щоб предмет не випав із загального GPA
     }
 
-    return { average: finalAvg, count: count, semesterGrade: finalSem, isExplicit: explicitSemester !== null };
+    // Якщо є семестрова, то в загальний бал GPA беремо її, інакше звичайний середній бал
+    let gpaValue = explicitSemester !== null ? explicitSemester : finalAvg;
+
+    return { 
+        average: finalAvg, 
+        count: count, 
+        semesterGrade: finalSem, 
+        isExplicit: explicitSemester !== null,
+        gpaValue: gpaValue
+    };
 }
 
 function getAnnualSubjects() {
@@ -273,7 +287,7 @@ function checkSpecialtyRequirements() {
 function updateTotalGPA() {
     let totalSum = 0; let validCount = 0;
     if (currentSemester === 'annual') { getAnnualSubjects().forEach(s => { if (s.annualGrade > 0) { totalSum += s.annualGrade; validCount++; } }); } 
-    else { semestersData[currentSemester].forEach(s => { const stats = calculateAverage(s.grades); if (stats.count > 0) { totalSum += stats.average; validCount++; } }); }
+    else { semestersData[currentSemester].forEach(s => { const stats = calculateAverage(s.grades); if (stats.gpaValue > 0) { totalSum += stats.gpaValue; validCount++; } }); }
     document.getElementById('total-gpa').textContent = validCount === 0 ? '0.00' : (totalSum / validCount).toFixed(2);
 }
 
@@ -297,6 +311,7 @@ function renderSubjects() {
                 const stats = calculateAverage(subject.grades); 
                 const el = document.createElement('div'); el.className = 'subject-item';
                 
+                // Якщо є Сем.С, то підсвічуємо бейдж
                 let explicitStyle = stats.isExplicit ? 'background-color: #10B981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);' : '';
                 let explicitIcon = stats.isExplicit ? '🎯 ' : '';
 
