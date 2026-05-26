@@ -7,8 +7,8 @@ const translations = {
         email_ph: "Електронна пошта", pass_ph: "Пароль", login_btn: "Увійти", no_account: "Немає акаунту?", register_link: "Зареєструватися",
         new_email_ph: "Нова електронна пошта", new_pass_ph: "Придумайте пароль", register_btn: "Створити акаунт", has_account: "Вже маєте акаунт?",
         login_link: "Увійти", welcome: "Вітаємо,", settings: "Налаштування", logout: "Вийти", sys_old: "Стара система (Всі оцінки)",
-        sys_new: "Нова система (Тільки ГР)", sem_1: "І Семестр", sem_2: "ІІ Семестр", sem_annual: "Річні оцінки",
-        import_title: "🚀 Швидкий імпорт з журналу", import_hint: "Вставте текст стовпчиком. Скрипт автоматично вичистить зайві слова в дужках.",
+        sys_new: "Нова система (Тільки ГР / ГР.П / ГР.С)", sem_1: "І Семестр", sem_2: "ІІ Семестр", sem_annual: "Річні оцінки",
+        import_title: "🚀 Швидкий імпорт з журналу", import_hint: "Вставте текст стовпчиком. Скрипт автоматично розпізнає назви та оцінки.",
         import_ph: "Вставте скопійовані оцінки сюди...", parse_btn: "Розпізнати оцінки", spec_title: "🎯 Аналіз за профілем",
         spec_ph: "Оберіть профіль...", add_title: "➕ Додати предмет вручну", add_ph: "Назва предмету",
         add_btn: "Додати", clear_btn: "Очистити семестр", total_gpa_sem: "Загальний середній бал:", total_gpa_ann: "Загальний середній річний бал:",
@@ -156,7 +156,7 @@ window.deleteUserAdmin = function(emailToDelete) { if (!isFirebaseConnected) ret
 
 
 // =========================================================================
-// 5. ОБЧИСЛЕННЯ ОЦІНОК (ЖОРСТКО РАХУЄ ЛИШЕ ГР ТА СЕМЕСТР)
+// 5. ОБЧИСЛЕННЯ ОЦІНОК (РАХУЄ ЛИШЕ ГР, ГР.П, ГР.С ТА СЕМЕСТРОВУ)
 // =========================================================================
 let currentSemester = 1; let gradingSystem = 'new'; let semestersData = { 1: [], 2: [] };
 const specialtyCategories = [
@@ -205,23 +205,23 @@ function calculateAverage(gradesString) {
     let stringToParse = gradesString;
     if (semMatch) {
         explicitSemester = parseFloat(semMatch[1]);
-        stringToParse = stringToParse.replace(semRegex, ' '); // Вирізаємо з подальшого розрахунку
+        stringToParse = stringToParse.replace(semRegex, ' '); 
     }
 
-    // 2. РАХУЄМО ОЦІНКИ ЗАЛЕЖНО ВІД СИСТЕМИ
+    // 2. СОРТУВАННЯ ТА ОБЧИСЛЕННЯ ОЦІНОК
     if (gradingSystem === 'new') {
-        // НОВА СИСТЕМА: РАХУЮТЬСЯ ВИКЛЮЧНО ГР!
-        // Ігноруємо ВСІ звичайні оцінки (навіть якщо вони є). Шукаємо тільки "(Гр: 10)", "ГР1: 11" або "10 (ГР)"
-        const regexGR = /(?:ГР|Група результатів)\s*\d*[^0-9]*([1-9]|1[0-2])\b|\b([1-9]|1[0-2])\s*\([^)]*ГР[^)]*\)/gi;
+        // РАХУЄМО ТІЛЬКИ: ГР, ГР.П, ГР.С (ігноруючи звичайні)
+        // Скануємо дужки типу (ГР: 10), (ГР.П: 11), (ГР.С: 12) або написи без дужок
+        const regexGR = /(?:ГР|Група результатів)(?:\.[ПССпсс])?[^\d]*([1-9]|1[0-2])\b|\b([1-9]|1[0-2])\s*\([^)]*ГР(?:\.[ПССпсс])?[^)]*\)/gi;
         const matches = [...stringToParse.matchAll(regexGR)]; 
+        
         matches.forEach(m => { 
-            let val = m[1] || m[2]; // Беремо те число, яке знайшлось
+            let val = m[1] || m[2]; 
             if (val) { sum += parseFloat(val); count++; } 
         });
-        // Все інше просто ігнорується, ніби його там і немає.
         
     } else {
-        // СТАРА СИСТЕМА: Рахуються всі поточні оцінки
+        // СТАРА СИСТЕМА: Рахуємо все підряд, крім зошитів та поточного мотлоху
         let cleanString = stringToParse.replace(/\([^)]*\)/g, ' ').replace(/\[[^\]]*\]/g, ' '); 
         cleanString = cleanString.replace(/(?:зош|онлайн|тема|дз|кр|ср|пр|лр|оцінка)[а-яіїєґa-z.:-]*\s*([1-9]|1[0-2])\b/gi, ' ');
         const rawItems = cleanString.split(/[\s,]+/);
@@ -234,7 +234,7 @@ function calculateAverage(gradesString) {
     let finalAvg = count === 0 ? 0 : +(sum / count).toFixed(2);
     let finalSem = count === 0 ? 0 : Math.round(sum / count);
 
-    // 3. СЕМЕСТРОВА ОЦІНКА БЕЗЗАПЕРЕЧНО СТАЄ ФІНАЛЬНОЮ
+    // 3. СЕМЕСТРОВА ОЦІНКА МАЄ НАЙВИЩИЙ ПРІОРИТЕТ ДЛЯ СЕМЕСТРУ
     if (explicitSemester !== null) {
         finalSem = explicitSemester;
     }
@@ -304,7 +304,6 @@ function renderSubjects() {
                 const stats = calculateAverage(subject.grades); 
                 const el = document.createElement('div'); el.className = 'subject-item';
                 
-                // Якщо є Сем.С, то підсвічуємо бейдж
                 let explicitStyle = stats.isExplicit ? 'background-color: #10B981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);' : '';
                 let explicitIcon = stats.isExplicit ? '🎯 ' : '';
 
@@ -318,7 +317,7 @@ function renderSubjects() {
 
 
 // =========================================================================
-// 6. РОЗУМНИЙ ПАРСЕР ОЦІНОК
+// 6. РОЗУМНИЙ ПАРСЕР ОЦІНОК (ОБ'ЄДНУЄ ГР, ГР.П, ГР.С)
 // =========================================================================
 document.getElementById('parse-btn').addEventListener('click', () => {
     const rawText = document.getElementById('import-text').value; 
@@ -328,7 +327,8 @@ document.getElementById('parse-btn').addEventListener('click', () => {
     let appendedCount = 0;
     const lines = rawText.replace(/\r/g, '').split('\n');
 
-    const subTopics = ['зош', 'онлайн', 'тема', 'гр', 'робота', 'урок', 'дз', 'оцінка', 'контрольна', 'самостійна', 'практична', 'лабораторна', 'зошит', 'проєкт', 'тест', 'ведення', 'ср', 'кр', 'пр', 'лр', 'сем', 'семс', 'семестрова', 'семестр', 'скоригована'];
+    // Ключові слова, які ми прикріплюємо в дужки до предмета
+    const subTopics = ['зош', 'онлайн', 'тема', 'гр', 'робота', 'урок', 'дз', 'оцінка', 'контрольна', 'самостійна', 'практична', 'лабораторна', 'зошит', 'проєкт', 'тест', 'ведення', 'ср', 'кр', 'пр', 'лр', 'сем', 'семс', 'семестрова', 'семестр', 'скоригована', 'грп', 'грс', 'гр.п', 'гр.с'];
 
     let lastSubjectRef = null;
 
