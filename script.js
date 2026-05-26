@@ -156,7 +156,7 @@ window.deleteUserAdmin = function(emailToDelete) { if (!isFirebaseConnected) ret
 
 
 // =========================================================================
-// 5. ОБЧИСЛЕННЯ ОЦІНОК (СЕМ.С БЕРЕТЬСЯ, ІНАКШЕ РАХУЮТЬСЯ ЗВИЧАЙНІ)
+// 5. ОБЧИСЛЕННЯ ОЦІНОК (ЖОРСТКО РАХУЄ ЛИШЕ ГР ТА СЕМЕСТР)
 // =========================================================================
 let currentSemester = 1; let gradingSystem = 'new'; let semestersData = { 1: [], 2: [] };
 const specialtyCategories = [
@@ -197,37 +197,31 @@ window.switchSemester = function(semesterNum) { currentSemester = semesterNum; d
 function calculateAverage(gradesString) {
     let sum = 0; let count = 0;
     
-    // 1. ШУКАЄМО ЧИ Є "СЕМ.С" АБО СЕМЕСТРОВА
+    // 1. ШУКАЄМО СЕМЕСТРОВУ ОЦІНКУ (Сем.С, Семестрова)
     let explicitSemester = null;
     const semRegex = /(?:Сем\.?\s*С?|Семестрова|Семестр|Скоригована)[^\d]*([1-9]|1[0-2])\b/i;
     const semMatch = gradesString.match(semRegex);
     
     let stringToParse = gradesString;
     if (semMatch) {
-        explicitSemester = parseFloat(semMatch[1]); // Запам'ятовуємо цю оцінку
-        stringToParse = stringToParse.replace(semRegex, ' '); // Вирізаємо, щоб вона не рахувалась двічі
+        explicitSemester = parseFloat(semMatch[1]);
+        stringToParse = stringToParse.replace(semRegex, ' '); // Вирізаємо з подальшого розрахунку
     }
 
-    // 2. РАХУЄМО ВСІ ПОТОЧНІ (ІГНОРУЮЧИ ЗОШИТИ ТА ЕНКИ)
+    // 2. РАХУЄМО ОЦІНКИ ЗАЛЕЖНО ВІД СИСТЕМИ
     if (gradingSystem === 'new') {
-        const hasGR = /ГР/i.test(stringToParse);
-        if (hasGR) {
-            const regexGR = /\b([1-9]|1[0-2])\s*\([^)]*ГР[^)]*\)/gi; 
-            const matches = [...stringToParse.matchAll(regexGR)]; 
-            matches.forEach(m => { sum += parseFloat(m[1]); count++; });
-        } else {
-            // Видаляємо дужки і слова типу "зош"
-            let cleanString = stringToParse.replace(/\([^)]*\)/g, ' ').replace(/\[[^\]]*\]/g, ' '); 
-            cleanString = cleanString.replace(/(?:зош|онлайн|тема|дз|кр|ср|пр|лр|оцінка)[а-яіїєґa-z.:-]*\s*([1-9]|1[0-2])\b/gi, ' ');
-            
-            const rawItems = cleanString.split(/[\s,]+/); 
-            rawItems.forEach(item => { 
-                const num = parseFloat(item.trim()); 
-                // Літери "Н" (NaN) автоматично відкидаються
-                if (!isNaN(num) && num >= 1 && num <= 12) { sum += num; count++; } 
-            });
-        }
+        // НОВА СИСТЕМА: РАХУЮТЬСЯ ВИКЛЮЧНО ГР!
+        // Ігноруємо ВСІ звичайні оцінки (навіть якщо вони є). Шукаємо тільки "(Гр: 10)", "ГР1: 11" або "10 (ГР)"
+        const regexGR = /(?:ГР|Група результатів)\s*\d*[^0-9]*([1-9]|1[0-2])\b|\b([1-9]|1[0-2])\s*\([^)]*ГР[^)]*\)/gi;
+        const matches = [...stringToParse.matchAll(regexGR)]; 
+        matches.forEach(m => { 
+            let val = m[1] || m[2]; // Беремо те число, яке знайшлось
+            if (val) { sum += parseFloat(val); count++; } 
+        });
+        // Все інше просто ігнорується, ніби його там і немає.
+        
     } else {
+        // СТАРА СИСТЕМА: Рахуються всі поточні оцінки
         let cleanString = stringToParse.replace(/\([^)]*\)/g, ' ').replace(/\[[^\]]*\]/g, ' '); 
         cleanString = cleanString.replace(/(?:зош|онлайн|тема|дз|кр|ср|пр|лр|оцінка)[а-яіїєґa-z.:-]*\s*([1-9]|1[0-2])\b/gi, ' ');
         const rawItems = cleanString.split(/[\s,]+/);
@@ -240,12 +234,11 @@ function calculateAverage(gradesString) {
     let finalAvg = count === 0 ? 0 : +(sum / count).toFixed(2);
     let finalSem = count === 0 ? 0 : Math.round(sum / count);
 
-    // 3. ЯКЩО Є СЕМЕСТРОВА ОЦІНКА - ВОНА ПЕРЕБИВАЄ СЕМЕСТР, АЛЕ АВЕРЕДЖ ЗАЛИШАЄТЬСЯ СТАРУ
+    // 3. СЕМЕСТРОВА ОЦІНКА БЕЗЗАПЕРЕЧНО СТАЄ ФІНАЛЬНОЮ
     if (explicitSemester !== null) {
         finalSem = explicitSemester;
     }
 
-    // Якщо є семестрова, то в загальний бал GPA беремо її, інакше звичайний середній бал
     let gpaValue = explicitSemester !== null ? explicitSemester : finalAvg;
 
     return { 
